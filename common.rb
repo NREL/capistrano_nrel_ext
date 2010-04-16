@@ -2,8 +2,8 @@ load "#{File.dirname(__FILE__)}/actions/remote_tests"
 load "#{File.dirname(__FILE__)}/actions/sample_files"
 
 # Setup default environment variables.
-default_environment["LD_LIBRARY_PATH"] = "/var/lib/instantclient_11_1" # For Rails & Oracle
-default_environment["TNS_ADMIN"] = "/var/lib/instantclient_11_1" # For Rails & Oracle so it knows where to find the sqlnet.ora file.
+default_environment["LD_LIBRARY_PATH"] = "/var/lib/instantclient" # For Rails & Oracle
+default_environment["TNS_ADMIN"] = "/var/lib/instantclient" # For Rails & Oracle so it knows where to find the sqlnet.ora file.
 
 # Don't use sudo.
 set :use_sudo, false
