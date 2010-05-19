@@ -9,6 +9,8 @@ Capistrano::Configuration.instance(true).load do
   #
   after "deploy:update_code", "deploy:apache:config"
   before "deploy:restart", "deploy:apache:install"
+  before "undeploy:delete", "undeploy:apache:delete"
+  after "undeploy", "deploy:apache:restart"
 
   #
   # Dependencies
@@ -59,6 +61,16 @@ Capistrano::Configuration.instance(true).load do
 
           run "ln -sf #{conf_file} #{apache_conf_dir}/sites/#{deploy_name}.conf"
         end
+      end
+    end
+  end
+
+  namespace :undeploy do
+    namespace :apache do
+      # Remove the symbolic link to the apache configuration file that's in
+      # place for this deployment.
+      task :delete do
+        run "rm -f #{apache_conf_dir}/sites/#{deploy_name}.conf"
       end
     end
   end

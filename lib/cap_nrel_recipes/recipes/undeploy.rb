@@ -17,11 +17,7 @@ Capistrano::Configuration.instance(true).load do
       end.downcase
 
       if(confirm == "y")
-        apache.delete
         delete
-
-        # Restart Apache after the configuration file has been removed.
-        deploy.apache.restart
       end
     end
 
@@ -36,14 +32,6 @@ Capistrano::Configuration.instance(true).load do
           sudo(delete_command)
         rescue Capistrano::CommandError
         end
-      end
-    end
-
-    namespace :apache do
-      # Remove the symbolic link to the apache configuration file that's in
-      # place for this deployment.
-      task :delete do
-        run "rm -f #{apache_conf_dir}/sites/#{deploy_name}.conf"
       end
     end
   end

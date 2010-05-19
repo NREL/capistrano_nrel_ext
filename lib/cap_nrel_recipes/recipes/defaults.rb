@@ -1,3 +1,14 @@
+# Automatically include other common recipes that should be used on all
+# servers. These recipes should not require additional dependencies on the
+# destination server.
+require "cap_nrel_recipes/recipes/clean_slate"
+require "cap_nrel_recipes/recipes/cleanup"
+require "cap_nrel_recipes/recipes/finalize_permissions"
+require "cap_nrel_recipes/recipes/setup"
+require "cap_nrel_recipes/recipes/shared_children"
+require "cap_nrel_recipes/recipes/shared_children_files"
+require "cap_nrel_recipes/recipes/undeploy"
+
 Capistrano::Configuration.instance(true).load do
   # Setup default environment variables.
   default_environment["LD_LIBRARY_PATH"] = "/var/lib/instantclient" # For Rails & Oracle

@@ -12,7 +12,7 @@ Capistrano::Configuration.instance(true).load do
   before "deploy:restart", "deploy:monit:install"
   after "deploy:start", "deploy:monit:reload"
   after "deploy:restart", "deploy:monit:reload"
-  after "undeploy:delete", "undeploy:monit:delete"
+  before "undeploy:delete", "undeploy:monit:delete"
 
   #
   # Dependencies
