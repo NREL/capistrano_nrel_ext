@@ -28,6 +28,8 @@ Capistrano::Configuration.instance(true).load do
               "ln -s #{shared_uploads_path}/public/#{stage} #{latest_release}/#{upload_dir}"
           rescue Capistrano::CommandError
           end
+
+          writable_children << File.join(shared_uploads_path, "public", stage.to_s, upload_dir)
         end
       end
     end

@@ -30,6 +30,8 @@ Capistrano::Configuration.instance(true).load do
   # Keep a cached checkout on the server so updates are quicker.
   set :deploy_via, :remote_cache
 
+  set(:release_name) { set :deploy_timestamped, true; Time.now.utc.strftime("%Y_%m_%d_%H_%M_%S") }
+
   # Set the default repository path which will check out of trunk.
   set :repository_subdirectory, "trunk"
   set(:repository) { "https://cttssvn.nrel.gov/svn/#{application}/#{repository_subdirectory}" }

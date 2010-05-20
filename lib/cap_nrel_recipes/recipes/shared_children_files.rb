@@ -9,14 +9,14 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
-  after "deploy:setup", "deploy:shared_children_files:setup"
-  after "deploy:finalize_update", "deploy:shared_children_files:finalize_update"
+  after "deploy:setup", "deploy:shared_children_file_tasks:setup"
+  after "deploy:finalize_update", "deploy:shared_children_file_tasks:finalize_update"
 
   #
   # Tasks
   #
   namespace :deploy do
-    namespace :shared_children_files do
+    namespace :shared_children_file_tasks do
       task :setup, :except => { :no_release => true } do
         dirs = shared_children_files.collect { |file| File.join(shared_path, File.dirname(file)) }
         dirs.uniq!

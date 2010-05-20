@@ -2,13 +2,13 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
-  after "deploy:finalize_update", "deploy:shared_children:finalize_update"
+  after "deploy:finalize_update", "deploy:shared_children_tasks:finalize_update"
 
   #
   # Tasks
   #
   namespace :deploy do
-    namespace :shared_children do
+    namespace :shared_children_tasks do
       task :finalize_update, :except => { :no_release => true } do
         shared_children.each do |shared_dir|
           begin

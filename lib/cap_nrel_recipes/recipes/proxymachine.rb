@@ -1,3 +1,5 @@
+require "cap_nrel_recipes/actions/remote_tests"
+
 Capistrano::Configuration.instance(true).load do
   set :proxymachine_servers, []
   set :proxymachine_conf_dir, "/etc/proxymachine"
