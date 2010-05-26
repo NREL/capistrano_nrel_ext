@@ -1,22 +1,18 @@
 require "cap_nrel_recipes/actions/remote_tests"
 require "cap_nrel_recipes/actions/sample_files"
-require "cap_nrel_recipes/recipes/previous_release"
 
 Capistrano::Configuration.instance(true).load do
   #
   # Variables
   #
   set :monit_conf_dir, "/etc/monit/conf.d"
-  set :monit_conf_files, []
-  set(:monit_group) { "#{deploy_name}-#{release_name}" }
-  set(:previous_monit_group) { if(previous_release_name) then "#{deploy_name}-#{previous_release_name}" else nil end}
+  set :monit_groups, {}
 
   #
   # Hooks 
   #
   after "deploy:update_code", "deploy:monit:config"
-  before "deploy:restart", "deploy:monit:install"
-  after "deploy:restart", "deploy:monit:remove_previous_group"
+  before "deploy:restart", "deploy:monit:reload"
   before "undeploy:delete", "undeploy:monit:delete"
 
   #
@@ -35,66 +31,51 @@ Capistrano::Configuration.instance(true).load do
         replacement) to create the actual config file to be used.
       DESC
       task :config, :except => { :no_release => true } do
-        parse_sample_files(monit_conf_files)
-      end
-
-      desc <<-DESC
-        Install the Monit configuration files in a system-wide directory for
-        Monit to find. This makes a symbolic link to the latest configuration
-        file for this deployment in Monit's configuration directory.
-      DESC
-      task :install, :except => { :no_release => true } do
-        monit_conf_files.each do |file|
-          path = File.join(latest_release, file)
-          if(remote_file_exists?(path))
-            filename = "#{monit_group}-#{File.basename(path)}"
-            run "ln -sf #{path} #{File.join(monit_conf_dir, filename)}"
-          end
+        monit_groups.each do |group_name, conf_file|
+          set :monit_group_name, group_name
+          parse_sample_files(conf_file)
         end
-
-        deploy.monit.reload
       end
 
       desc <<-DESC
         Reload Monit configuration.
       DESC
       task :reload, :roles => :app, :except => { :no_release => true } do
+        # Reloading monit gets a wee bit ugly. We want to stop all group
+        # processes, reload the configuration, and then start all group
+        # processes. Reloading this way accounts for any new additions or
+        # subtractions that might be inside the monit config files.
+        
         begin
-          sudo "monit reload"
-        rescue Capistrano::CommandError
-        end
+          # Stop the monit daemon. This lets the monit stop group command below
+          # happen synchronously. If the daemon is running during the group
+          # stop command, it gets backgrounded, and then the next call to
+          # reload the configuration happens immediately, before the processes
+          # may have stopped.
+          sudo "/etc/init.d/monit stop"
 
-        deploy.monit.start_group
-      end
-
-      desc <<-DESC
-        Start the group of monit processes for this deployment.
-      DESC
-      task :start_group, :roles => :app, :except => { :no_release => true } do
-        begin
-          sudo "monit -g #{monit_group} start all"
-        rescue Capistrano::CommandError
-        end
-      end
-
-      desc <<-DESC
-        Stop the group of monit processes for this deployment.
-      DESC
-      task :stop_group, :roles => :app, :except => { :no_release => true } do
-        begin
-          sudo "monit -g #{monit_group} stop all"
-        rescue Capistrano::CommandError
-        end
-      end
-
-      task :remove_previous_group, :roles => :app, :except => { :no_release => true } do
-        if previous_monit_group
-          begin
-            sudo "monit -g #{previous_monit_group} stop all"
-          rescue Capistrano::CommandError
+          # With the monit daemon stopped, these group start and stop commands
+          # now happen synchronously, so we can reliably stop all processes,
+          # put in our new configuration file, and then start all processes
+          # using that new config file.
+          monit_groups.each do |group_name, conf_file|
+            conf_file_path = File.join(latest_release, conf_file)
+            if(remote_file_exists?(conf_file_path))
+              run "sudo monit -g #{group_name} stop all && " +
+                "ln -sf #{conf_file_path} #{File.join(monit_conf_dir, "#{group_name}.monitrc")} && " +
+                "sudo monit -g #{group_name} start all"
+            end
           end
+        ensure
+          # Bring the monit daemon back up.
+          sudo "/etc/init.d/monit start"
+        end
 
-          run "rm -f #{monit_conf_dir}/#{previous_monit_group}-*"
+        # Since the daemon was down while we added new groups, it might not be
+        # monitoring them. This group should already be up, but we'll just be
+        # sure monit knows about it.
+        monit_groups.each do |group_name, files|
+          sudo "monit -g #{group_name} start all"
         end
       end
     end
@@ -106,8 +87,18 @@ Capistrano::Configuration.instance(true).load do
       # for this deployment.
       task :delete do
         deploy.monit.stop_group
-        run "rm -f #{monit_conf_dir}/#{monit_group}-*"
-        deploy.monit.reload
+        begin
+          begin
+            sudo "/etc/init.d/monit stop"
+          rescue Capistrano::CommandError
+          end
+
+          monit_groups.each do |group_name, conf_file|
+            sudo "monit -g #{group_name} stop all"
+          end
+        ensure
+          sudo "/etc/init.d/monit start"
+        end
       end
     end
   end
