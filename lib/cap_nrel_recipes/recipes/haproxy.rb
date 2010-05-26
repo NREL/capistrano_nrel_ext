@@ -2,15 +2,27 @@ require "cap_nrel_recipes/actions/remote_tests"
 require "cap_nrel_recipes/actions/sample_files"
 
 Capistrano::Configuration.instance(true).load do
-  # Create the apache configuration file for this site based on the sample file.
-  after "deploy:update_code", "deploy:haproxy:config"
+  #
+  # Variables
+  #
+  set :haproxy_conf_dir, "/etc/haproxy/conf.d"
 
+  #
+  # Hooks 
+  #
+  after "deploy:update_code", "deploy:haproxy:config"
+  before "deploy:restart", "deploy:haproxy:install"
+  after "deploy:restart", "haproxy:reload"
+
+  #
+  # Tasks
+  #
   namespace :haproxy do
     desc <<-DESC
       Restart Apache. This should be executed if new Apache configuration
       files have been deployed.
     DESC
-    task :restart, :roles => :app, :except => { :no_release => true } do
+    task :reload, :roles => :app, :except => { :no_release => true } do
       sudo "/etc/init.d/haproxy reload"
     end
   end
@@ -23,7 +35,7 @@ Capistrano::Configuration.instance(true).load do
         variable replacement) to create the actual config file to be used.
       DESC
       task :config, :except => { :no_release => true } do
-        parse_sample_files(["config/haproxy.cfg"])
+        parse_sample_files(["config/haproxy/base.cfg", "config/haproxy/public_web.cfg"])
       end
 
       desc <<-DESC
@@ -32,18 +44,16 @@ Capistrano::Configuration.instance(true).load do
         file for this deployment in Apache's configuration directory.
       DESC
       task :install, :except => { :no_release => true } do
-        conf_file = "#{latest_release}/config/apache/#{stage}.conf"
+        public_conf_file = File.join(latest_release, "config", "haproxy", "public_web.cfg")
+        if(remote_file_exists?(public_conf_file))
+          install_path = File.join(haproxy_conf_dir, "011-public_web-#{deploy_name}.cfg")
+          run "ln -sf #{public_conf_file} #{install_path}"
+        end
 
+        conf_file = File.join(latest_release, "config", "haproxy", "base.cfg")
         if(remote_file_exists?(conf_file))
-          # Ensure the the Apache configuration directories are in place.
-          dirs = ["#{apache_conf_dir}/include", "#{apache_conf_dir}/sites"]
-          begin
-            run "mkdir -p #{dirs.join(' ')}"
-            run "chmod -f g+w #{dirs.join(' ')}"
-          rescue Capistrano::CommandError
-          end
-
-          run "ln -sf #{conf_file} #{apache_conf_dir}/sites/#{deploy_name}.conf"
+          install_path = File.join(haproxy_conf_dir, "#{deploy_name}.cfg")
+          run "ln -sf #{conf_file} #{install_path}"
         end
       end
     end
