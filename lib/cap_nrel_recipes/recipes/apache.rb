@@ -5,35 +5,37 @@ Capistrano::Configuration.instance(true).load do
   #
   # Variables
   #
-  set :apache_conf_dir, "/etc/apache2/ctts"
+  set :apache_conf_dir, "/etc/apache2/sites-available"
 
   #
   # Hooks 
   #
   after "deploy:update_code", "deploy:apache:config"
   before "deploy:restart", "deploy:apache:install"
+  after "deploy:restart", "apache:reload"
   before "undeploy:delete", "undeploy:apache:delete"
-  after "undeploy", "deploy:apache:restart"
+  after "undeploy", "apache:reload"
 
   #
   # Dependencies
   #
   depend(:remote, :directory, apache_conf_dir)
-  depend(:remote, :file, "/etc/apache2/sites-enabled/ctts")
 
   #
   # Tasks
   #
+  namespace :apache do
+    desc <<-DESC
+      Restart Apache. This should be executed if new Apache configuration
+      files have been deployed.
+    DESC
+    task :reload, :roles => :app, :except => { :no_release => true } do
+      sudo "/etc/init.d/apache2 reload"
+    end
+  end
+
   namespace :deploy do
     namespace :apache do
-      desc <<-DESC
-        Restart Apache. This should be executed if new Apache configuration
-        files have been deployed.
-      DESC
-      task :restart, :roles => :app, :except => { :no_release => true } do
-        sudo "/etc/init.d/apache2 reload"
-      end
-
       desc <<-DESC
         Create the Apache configuration file. If a sample file for the given
         stage is present in config/apache, the sample is run through ERB (for
@@ -42,6 +44,8 @@ Capistrano::Configuration.instance(true).load do
       task :config, :except => { :no_release => true } do
         parse_sample_files([
           "config/apache/paths.conf",
+          "config/apache/main_site.conf",
+          "config/apache/main_site_base.conf",
           "config/apache/#{stage}.conf"])
       end
 
@@ -52,17 +56,9 @@ Capistrano::Configuration.instance(true).load do
       DESC
       task :install, :except => { :no_release => true } do
         conf_file = "#{latest_release}/config/apache/#{stage}.conf"
-
         if(remote_file_exists?(conf_file))
-          # Ensure the the Apache configuration directories are in place.
-          dirs = ["#{apache_conf_dir}/include", "#{apache_conf_dir}/sites"]
-          begin
-            run "mkdir -p #{dirs.join(' ')}"
-            run "chmod -f g+w #{dirs.join(' ')}"
-          rescue Capistrano::CommandError
-          end
-
-          run "ln -sf #{conf_file} #{apache_conf_dir}/sites/#{deploy_name}.conf"
+          run "ln -sf #{conf_file} #{apache_conf_dir}/#{deploy_name}"
+          run "a2ensite #{deploy_name}"
         end
       end
     end
@@ -73,7 +69,8 @@ Capistrano::Configuration.instance(true).load do
       # Remove the symbolic link to the apache configuration file that's in
       # place for this deployment.
       task :delete do
-        run "rm -f #{apache_conf_dir}/sites/#{deploy_name}.conf"
+        run "a2dissite #{deploy_name}"
+        run "rm -f #{apache_conf_dir}/#{deploy_name}"
       end
     end
   end
