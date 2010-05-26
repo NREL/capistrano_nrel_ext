@@ -19,6 +19,7 @@ Capistrano::Configuration.instance(true).load do
 
   # Set a unique name for this deployed application.
   set(:deploy_name) { "#{stage}-#{application}" }
+  set(:deploy_release_name) { "#{deploy_name}-#{release_name}" }
 
   # Our deploy path will be made up of our custom deploy_to_base and
   # deploy_to_subdirectory variables which can be set by other extensions or
