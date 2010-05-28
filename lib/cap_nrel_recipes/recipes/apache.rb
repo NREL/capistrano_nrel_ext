@@ -42,11 +42,7 @@ Capistrano::Configuration.instance(true).load do
         variable replacement) to create the actual config file to be used.
       DESC
       task :config, :except => { :no_release => true } do
-        parse_sample_files([
-          "config/apache/paths.conf",
-          "config/apache/main_site.conf",
-          "config/apache/main_site_base.conf",
-          "config/apache/#{stage}.conf"])
+        parse_sample_files(["config/apache"])
       end
 
       desc <<-DESC

@@ -16,17 +16,32 @@ require "cap_nrel_recipes/actions/remote_tests"
 #
 # @param [Array<String>] An array of file paths, relative to the release
 # directory, that might potentially have sample versions.
-def parse_sample_files(sample_files)
+def parse_sample_files(file_paths)
   require "tempfile"
 
-  sample_files.each do |file_path|
-    sample_file_path = "#{file_path}.sample"
+  file_paths.each do |file_path|
+    remote_path = File.join(latest_release, file_path)
 
-    remote_sample_path = File.join(latest_release, sample_file_path)
+    remote_sample_paths = []
 
-    # If a sample configuration file exists for this stage, run it through
-    # ERB to replace any ruby variables inside the file.
-    if(remote_file_exists?(remote_sample_path))
+    begin
+      remote_sample_paths += capture("ls -1 #{remote_path}.erb").to_s.split
+    rescue Capistrano::CommandError
+    end
+
+    begin
+      remote_sample_paths += capture("ls -1 #{remote_path}.sample").to_s.split
+    rescue Capistrano::CommandError
+    end
+
+    begin
+      remote_sample_paths += capture("find #{remote_path} -name '*.erb' -o -name '*.sample'").to_s.split
+    rescue Capistrano::CommandError
+    end
+
+    puts "REMOTE SAMPLE PATHS: #{remote_sample_paths.inspect}"
+
+    remote_sample_paths.each do |remote_sample_path|
       # Download the sample path from the server. We want to grab the copy from
       # the server, and not the local copy, since they may differ (If I'm doing
       # a deploy and I haven't done an svn update or I'm deploying a specific
@@ -43,9 +58,11 @@ def parse_sample_files(sample_files)
       puts parsed_content
       logger.info("\n")
 
+      remote_path = remote_sample_path.gsub(/\.(erb|sample)$/, "")
+
       # Write the evaluated configuration file to the server as the real
       # configuration file.
-      put(parsed_content, File.join(latest_release, file_path))
+      put(parsed_content, remote_path)
     end
   end
 end

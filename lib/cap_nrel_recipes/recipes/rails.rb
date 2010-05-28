@@ -4,6 +4,21 @@ Capistrano::Configuration.instance(true).load do
   #
   # Varabiles
   #
+  set :rails_applications, []
+
+  set :sub_rails_applications, {}
+
+  set(:all_rails_applications) do
+    all = {}
+
+    rails_applications.each do |application_path|
+      all[application_path] = "/"
+    end
+
+    all.merge!(sub_rails_applications)
+
+    all
+  end
 
   # Set the paths to any rails applications that are part of this project. The
   # key of this hash is the path, relative to latest_release, of the rails
@@ -15,7 +30,7 @@ Capistrano::Configuration.instance(true).load do
   # can configure Monit to startup and monitor the delayed_job script.
   set(:rails_delayed_job_applications) do
     apps = {}
-    rails_applications.each do |application_path, public_path|
+    all_rails_applications.each do |application_path, public_path|
       # Only include applications that have a delayed_job script.
       if(remote_file_exists?(File.join(latest_release, application_path, "script", "delayed_job")))
         # Make the key of this hash a name we can use inside the Monit
@@ -71,7 +86,7 @@ Capistrano::Configuration.instance(true).load do
     namespace :rails do
       task :setup, :except => { :no_release => true } do
         dirs = []
-        rails_applications.each do |application_path, public_path|
+        all_rails_applications.each do |application_path, public_path|
           rails_shared_children.each do |shared_dir|
             dirs << File.join(shared_path, application_path, shared_dir)
           end
@@ -83,7 +98,7 @@ Capistrano::Configuration.instance(true).load do
       end
 
       task :finalize_update, :except => { :no_release => true } do
-        rails_applications.each do |application_path, public_path|
+        all_rails_applications.each do |application_path, public_path|
           rails_shared_children.each do |shared_dir|
             run "rm -rf #{File.join(latest_release, application_path, shared_dir)} && " +
               "mkdir -p #{File.dirname(File.join(latest_release, application_path, shared_dir))} && " +
@@ -93,7 +108,7 @@ Capistrano::Configuration.instance(true).load do
       end
 
       task :finalize_permissions, :except => { :no_release => true } do
-        rails_applications.each do |application_path, public_path|
+        all_rails_applications.each do |application_path, public_path|
           # Files and folders that need to be writable by the web server
           # (www-data user) will need to be writable by everyone.
           begin
@@ -111,7 +126,7 @@ Capistrano::Configuration.instance(true).load do
       end
 
       task :symlink_public_directories, :except => { :no_release => true } do
-        rails_applications.each do |application_path, public_path|
+        sub_rails_applications.each do |application_path, public_path|
           run("ln -fs #{File.join(latest_release, application_path, "public")} #{File.join(latest_release, "public", public_path)}")
         end
       end
@@ -124,12 +139,12 @@ Capistrano::Configuration.instance(true).load do
         # Since we have set RailsAppSpawnerIdleTime to keep applications alive
         # indefinitely, this is more of a problem. So instead, we'll do a full
         # apache reload to kill off any old processes.
-        deploy.apache.restart
+        # deploy.apache.restart
 
         # Spin up each Rails application by making a request 
-        rails_applications.each do |application_path, public_path|
+        all_rails_applications.each do |application_path, public_path|
           begin
-            run("wget -q -O /dev/null http://#{domain}/#{public_path}")
+            run("wget -q -O /dev/null http://#{File.join(domain, public_path)}")
           rescue Capistrano::CommandError
           end
         end
@@ -137,7 +152,7 @@ Capistrano::Configuration.instance(true).load do
 
       namespace :gems do
         task :install, :except => { :no_release => true } do
-          rails_applications.each do |application_path, public_path|
+          all_rails_applications.each do |application_path, public_path|
             if(remote_file_exists?(File.join(latest_release, application_path, "Rakefile")))
               run "cd #{File.join(latest_release, application_path)} && " +
                 "RAILS_ENV=#{rails_env} rake gems:install && " +
