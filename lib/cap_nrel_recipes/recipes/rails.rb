@@ -154,10 +154,12 @@ Capistrano::Configuration.instance(true).load do
         task :install, :except => { :no_release => true } do
           all_rails_applications.each do |application_path, public_path|
             if(remote_file_exists?(File.join(latest_release, application_path, "Rakefile")))
-              run "cd #{File.join(latest_release, application_path)} && " +
-                "RAILS_ENV=#{rails_env} rake gems:install && " +
-                "RAILS_ENV=#{rails_env} rake gems:unpack:dependencies && " +
-                "RAILS_ENV=#{rails_env} rake gems:build"
+              if(!remote_file_exists?(File.join(latest_release, application_path, "Gemfile")))
+                run "cd #{File.join(latest_release, application_path)} && " +
+                  "RAILS_ENV=#{rails_env} rake gems:install && " +
+                  "RAILS_ENV=#{rails_env} rake gems:unpack:dependencies && " +
+                  "RAILS_ENV=#{rails_env} rake gems:build"
+              end
             end
           end
         end

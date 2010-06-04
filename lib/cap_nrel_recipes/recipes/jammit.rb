@@ -24,13 +24,10 @@ Capistrano::Configuration.instance(true).load do
         # By default, look inside our root application, as well as any Rails
         # applications that might have their own Jammit configuration.
         jammit_paths = [latest_release]
-        begin
-          jammit_paths += rails_applications.collect do |application_path, public_path|
+        if(exists?(:all_rails_applications))
+          jammit_paths += all_rails_applications.collect do |application_path, public_path|
             File.join(latest_release, application_path)
           end
-        rescue NameError
-          # Rescue if rails_applications isn't defined. For some reason, defined?
-          # doesn't seem to work.
         end
 
         # Run the "jammit" command against all the paths that have a config file

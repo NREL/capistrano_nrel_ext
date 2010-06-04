@@ -15,9 +15,21 @@ Capistrano::Configuration.instance(true).load do
   namespace :deploy do
     namespace :gem_bundler do
       task :install, :except => { :no_release => true } do
-        gem_bundler_apps.each do |app_path|
-          run "cd #{File.join(latest_release, app_path)} && " +
-            "bundle install"
+        gem_bundler_paths = gem_bundler_apps.collect do |application_path|
+          File.join(latest_release, application_path)
+        end
+
+        if(exists?(:all_rails_applications))
+          gem_bundler_paths += all_rails_applications.collect do |application_path, public_path|
+            File.join(latest_release, application_path)
+          end
+        end
+
+        gem_bundler_paths.each do |application_path|
+          if(remote_file_exists?(File.join(application_path, "Gemfile")))
+            run "cd #{application_path} && " +
+              "bundle install"
+          end
         end
       end
     end
