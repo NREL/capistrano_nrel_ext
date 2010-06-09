@@ -1,5 +1,5 @@
-require "cap_nrel_recipes/actions/remote_tests"
-require "cap_nrel_recipes/actions/sample_files"
+require "capistrano_nrel_ext/actions/remote_tests"
+require "capistrano_nrel_ext/actions/sample_files"
 
 Capistrano::Configuration.instance(true).load do
   #

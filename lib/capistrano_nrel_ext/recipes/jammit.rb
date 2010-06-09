@@ -1,4 +1,4 @@
-require "cap_nrel_recipes/actions/remote_tests"
+require "capistrano_nrel_ext/actions/remote_tests"
 
 Capistrano::Configuration.instance(true).load do
   #

@@ -1,4 +1,4 @@
-require "cap_nrel_recipes/actions/remote_tests"
+require "capistrano_nrel_ext/actions/remote_tests"
 
 # Run sample configuration files through ERB so ruby variables can be
 # substituted into the file to produce the actual configuration file.
