@@ -28,7 +28,8 @@ Capistrano::Configuration.instance(true).load do
         gem_bundler_paths.each do |application_path|
           if(remote_file_exists?(File.join(application_path, "Gemfile")))
             run "cd #{application_path} && " +
-              "bundle install"
+              "mkdir -p #{application_path}/vendor && " +
+              "bundle install vendor/bundle"
           end
         end
       end
