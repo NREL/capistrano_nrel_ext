@@ -7,6 +7,7 @@ Capistrano::Configuration.instance(true).load do
   #
   set :apache_conf_dir, "/etc/apache2/sites-available"
   set :apache_init_script, "/etc/init.d/apache2"
+  set :apache_user, "www-data"
 
   #
   # Hooks 

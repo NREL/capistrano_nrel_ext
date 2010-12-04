@@ -1,5 +1,6 @@
 Manifest
 Rakefile
+capistrano_nrel_ext.gemspec
 lib/capistrano_nrel_ext/actions/remote_tests.rb
 lib/capistrano_nrel_ext/actions/sample_files.rb
 lib/capistrano_nrel_ext/recipes/apache.rb
@@ -16,6 +17,7 @@ lib/capistrano_nrel_ext/recipes/monit.rb
 lib/capistrano_nrel_ext/recipes/previous_release.rb
 lib/capistrano_nrel_ext/recipes/proxymachine.rb
 lib/capistrano_nrel_ext/recipes/rails.rb
+lib/capistrano_nrel_ext/recipes/redhat.rb
 lib/capistrano_nrel_ext/recipes/sandboxes.rb
 lib/capistrano_nrel_ext/recipes/server_ports.rb
 lib/capistrano_nrel_ext/recipes/server_process_registry.rb
