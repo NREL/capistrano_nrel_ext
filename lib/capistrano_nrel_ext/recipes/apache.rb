@@ -6,6 +6,7 @@ Capistrano::Configuration.instance(true).load do
   # Variables
   #
   set :apache_conf_dir, "/etc/apache2/sites-available"
+  set :apache_init_script, "/etc/init.d/apache2"
 
   #
   # Hooks 
@@ -19,7 +20,7 @@ Capistrano::Configuration.instance(true).load do
   #
   # Dependencies
   #
-  depend(:remote, :directory, apache_conf_dir)
+  #depend(:remote, :directory, apache_conf_dir)
 
   #
   # Tasks
@@ -30,7 +31,7 @@ Capistrano::Configuration.instance(true).load do
       files have been deployed.
     DESC
     task :reload, :roles => :app, :except => { :no_release => true } do
-      sudo "/etc/init.d/apache2 reload"
+      sudo "#{apache_init_script} reload"
     end
   end
 

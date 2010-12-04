@@ -6,6 +6,7 @@ Capistrano::Configuration.instance(true).load do
   # Variables
   #
   set :monit_conf_dir, "/etc/monit/conf.d"
+  set :monit_init_script, "/etc/init.d/monit"
   set :monit_groups, {}
 
   #
@@ -52,7 +53,7 @@ Capistrano::Configuration.instance(true).load do
           # stop command, it gets backgrounded, and then the next call to
           # reload the configuration happens immediately, before the processes
           # may have stopped.
-          sudo "/etc/init.d/monit stop"
+          sudo "#{monit_init_script} stop"
 
           # With the monit daemon stopped, these group start and stop commands
           # now happen synchronously, so we can reliably stop all processes,
@@ -68,7 +69,7 @@ Capistrano::Configuration.instance(true).load do
           end
         ensure
           # Bring the monit daemon back up.
-          sudo "/etc/init.d/monit start"
+          sudo "#{monit_init_script} start"
         end
 
         # Since the daemon was down while we added new groups, it might not be
@@ -89,7 +90,7 @@ Capistrano::Configuration.instance(true).load do
         deploy.monit.stop_group
         begin
           begin
-            sudo "/etc/init.d/monit stop"
+            sudo "#{monit_init_script} stop"
           rescue Capistrano::CommandError
           end
 
@@ -97,7 +98,7 @@ Capistrano::Configuration.instance(true).load do
             sudo "monit -g #{group_name} stop all"
           end
         ensure
-          sudo "/etc/init.d/monit start"
+          sudo "#{monit_init_script} start"
         end
       end
     end
