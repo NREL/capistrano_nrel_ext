@@ -14,6 +14,9 @@ Capistrano::Configuration.instance(true).load do
   default_environment["LD_LIBRARY_PATH"] = "/var/lib/instantclient" # For Rails & Oracle
   default_environment["TNS_ADMIN"] = "/var/lib/instantclient" # For Rails & Oracle so it knows where to find the sqlnet.ora file.
 
+  # Use a pseudo terminal so sudo will work on systems with requiretty enabled.
+  default_run_options[:pty] = true
+
   # Don't use sudo.
   set :use_sudo, false
 
@@ -31,6 +34,7 @@ Capistrano::Configuration.instance(true).load do
   # Keep a cached checkout on the server so updates are quicker.
   set :deploy_via, :remote_cache
 
+  # Set a friendly release name, where the date and time parts are separated.
   set(:release_name) { set :deploy_timestamped, true; Time.now.utc.strftime("%Y_%m_%d_%H_%M_%S") }
 
   # Set the default repository path which will check out of trunk.
