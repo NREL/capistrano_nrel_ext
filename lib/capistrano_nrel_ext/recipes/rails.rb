@@ -44,7 +44,7 @@ Capistrano::Configuration.instance(true).load do
 
   # Setup any shared folders that should be kept between deployments inside a
   # Rails application.
-  set :rails_shared_children, %w(log tmp/pids)
+  set :rails_shared_children, %w(log tmp/pids vendor/bundle)
 
   # Set any folders or files that need to be writable by the Apache user inside
   # every Rails application. Since this applies to every Rails application, the
@@ -74,10 +74,10 @@ Capistrano::Configuration.instance(true).load do
 
   # For Passenger and Monit, this ruby_env_wrapper script needs to be in place
   # for Oracle compatibility.
-  depend(:remote, :file, "/usr/bin/ruby_env_wrapper")
+  # depend(:remote, :file, "/usr/bin/ruby_env_wrapper")
 
   # The daemons gem is needed for the delayed_job scripts to run.
-  depend(:remote, :gem, "daemons", ">= 1.0.10")
+  #depend(:remote, :gem, "daemons", ">= 1.0.10")
 
   #
   # Tasks
@@ -132,21 +132,9 @@ Capistrano::Configuration.instance(true).load do
       end
 
       task :restart, :roles => :app, :except => { :no_release => true } do
-        # Normally, we'd just restart each application by doing a touch
-        # tmp/restart.txt. However, as indicated here, that keeps the old
-        # deployment's rails processes alive due to capistrano symlinks:
-        # http://www.modrails.com/documentation/Users%20guide.html#capistrano
-        # Since we have set RailsAppSpawnerIdleTime to keep applications alive
-        # indefinitely, this is more of a problem. So instead, we'll do a full
-        # apache reload to kill off any old processes.
-        # deploy.apache.restart
-
         # Spin up each Rails application by making a request 
         all_rails_applications.each do |application_path, public_path|
-          begin
-            run("wget -q -O /dev/null http://#{File.join(domain, public_path)}")
-          rescue Capistrano::CommandError
-          end
+          run("touch #{File.join(current_release, application_path, "tmp", "restart.txt")}")
         end
       end
 
@@ -154,6 +142,7 @@ Capistrano::Configuration.instance(true).load do
         task :install, :except => { :no_release => true } do
           all_rails_applications.each do |application_path, public_path|
             if(remote_file_exists?(File.join(latest_release, application_path, "Rakefile")))
+              # Only run the old gem install command if no Gemfile exists.
               if(!remote_file_exists?(File.join(latest_release, application_path, "Gemfile")))
                 run "cd #{File.join(latest_release, application_path)} && " +
                   "RAILS_ENV=#{rails_env} rake gems:install && " +
