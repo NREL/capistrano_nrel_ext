@@ -54,23 +54,31 @@ Capistrano::Configuration.instance(true).load do
           # reload the configuration happens immediately, before the processes
           # may have stopped.
           sudo "#{monit_init_script} stop"
+        rescue Capistrano::CommandError
+        end
 
-          # With the monit daemon stopped, these group start and stop commands
-          # now happen synchronously, so we can reliably stop all processes,
-          # put in our new configuration file, and then start all processes
-          # using that new config file.
-          monit_groups.each do |group_name, conf_file|
-            conf_file_path = File.join(latest_release, conf_file)
-            if(remote_file_exists?(conf_file_path))
-              run "sudo monit -g #{group_name} stop all && " +
-                "ln -sf #{conf_file_path} #{File.join(monit_conf_dir, "#{group_name}.monitrc")} && " +
+        # With the monit daemon stopped, these group start and stop commands
+        # now happen synchronously, so we can reliably stop all processes, put
+        # in our new configuration file, and then start all processes using
+        # that new config file.
+        monit_groups.each do |group_name, conf_file|
+          conf_file_path = File.join(latest_release, conf_file)
+          if(remote_file_exists?(conf_file_path))
+            begin
+              begin
+                run "sudo monit -g #{group_name} stop all"
+              rescue Capistrano::CommandError
+              end
+
+              run "ln -sf #{conf_file_path} #{File.join(monit_conf_dir, "#{group_name}.monitrc")} && " +
                 "sudo monit -g #{group_name} start all"
+            rescue Capistrano::CommandError
             end
           end
-        ensure
-          # Bring the monit daemon back up.
-          sudo "#{monit_init_script} start"
         end
+
+        # Bring the monit daemon back up.
+        sudo "#{monit_init_script} start"
 
         # Since the daemon was down while we added new groups, it might not be
         # monitoring them. This group should already be up, but we'll just be
