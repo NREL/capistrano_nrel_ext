@@ -65,9 +65,6 @@ Capistrano::Configuration.instance(true).load do
   after "deploy:update_code", "deploy:rails:gems:install"
   after "deploy:update_code", "deploy:rails:finalize_permissions"
 
-  after "deploy:start", "deploy:rails:restart"
-  after "deploy:restart", "deploy:rails:restart"
-
   #
   # Dependencies
   #
@@ -132,7 +129,6 @@ Capistrano::Configuration.instance(true).load do
       end
 
       task :restart, :roles => :app, :except => { :no_release => true } do
-        # Spin up each Rails application by making a request 
         all_rails_applications.each do |application_path, public_path|
           run("touch #{File.join(current_release, application_path, "tmp", "restart.txt")}")
         end
