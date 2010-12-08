@@ -4,10 +4,26 @@ Capistrano::Configuration.instance(true).load do
   #
   set(:shared_uploads_path) { File.join(deploy_to_base, "shared_uploads", "current") }
 
-  # Setup any folders where uploaded content will go. The content needs to be
-  # kept between deployments, and we also want the ability to check the content
-  # into a subversion repository.
-  set :upload_children, %w()
+  # Define the directories where uploaded content will go. This content will be
+  # kept between deployments and will automatically be checked into a
+  # subversion repository.
+  #
+  # The keys of this hash define the public locations, relative to the
+  # release's root that will be linked to the shared uploads content. The
+  # values of the hash define the path inside the `shared_uploads_path` where
+  # the key path will be symbolically linked to. An example might make more
+  # sense:
+  #
+  # set :upload_children, {
+  #   "public/uploads" => "/",
+  #   "public/some/dir" => "/custom/path",
+  # }
+  #
+  # In the deployed release:
+  #
+  # CURRENT_RELEASE/public/uploads => SHARED_UPLOADS_PATH/public/production
+  # CURRENT_RELEASE/public/some/dir => SHARED_UPLOADS_PATH/public/production/custom/path
+  set :upload_children, {}
 
   #
   # Hooks
@@ -20,16 +36,22 @@ Capistrano::Configuration.instance(true).load do
   namespace :deploy do
     namespace :shared_uploads do
       task :finalize_update, :except => { :no_release => true } do
-        upload_children.each do |upload_dir|
-          begin
-            # The log folder should be shared between deployments.
-            run "rm -rf #{latest_release}/#{upload_dir} && " +
-              "mkdir -p #{shared_uploads_path}/public/#{stage} && " +
-              "ln -s #{shared_uploads_path}/public/#{stage} #{latest_release}/#{upload_dir}"
-          rescue Capistrano::CommandError
-          end
+        upload_children.each do |public_dir, shared_upload_dir|
+          public_install_path = File.join(latest_release, public_dir)
+          shared_upload_destination_path = File.join(shared_uploads_path, "public", stage.to_s, shared_upload_dir)
 
-          writable_children << File.join(shared_uploads_path, "public", stage.to_s, upload_dir)
+          # Install the proper symbolic links if they haven't already been
+          # setup.
+          run <<-CMD
+            if [ "`readlink #{public_install_path}`" != "#{shared_upload_destination_path}" ]; then \
+              mkdir -p #{shared_upload_destination_path} && \
+              rm -rf #{public_install_path} && \
+              ln -s #{shared_upload_destination_path} #{public_install_path}; \
+            fi
+          CMD
+
+          # Ensure that the upload folder is writable by the web server.
+          writable_paths << shared_upload_destination_path
         end
       end
     end

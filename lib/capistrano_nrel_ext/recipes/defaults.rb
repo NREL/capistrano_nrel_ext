@@ -49,6 +49,10 @@ Capistrano::Configuration.instance(true).load do
   # Setup any shared folders that should be kept between deployments.
   set :shared_children, %w(log)
 
-  # Set any folders or files that need to be writable by the Apache user.
+  # Set any folders or files that need to be writable by the web user. Children
+  # paths are given relative to the release's root.
   set :writable_children, %w(log)
+
+  # Set any absolute paths that need to be writable by the web user.
+  set :writable_paths, []
 end

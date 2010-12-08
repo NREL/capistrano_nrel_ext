@@ -34,7 +34,8 @@ Capistrano::Configuration.instance(true).load do
         # Try changing the permissions in both the release directory and the
         # shared directory, since chmod won't recursively follow symlinks.
         dirs = writable_children.collect { |d| File.join(latest_release, d) } + 
-          writable_children.collect { |d| File.join(shared_path, d) }
+          writable_children.collect { |d| File.join(shared_path, d) } +
+          writable_paths
 
         if(dirs.any?)
           run "chmod -Rf o+w #{dirs.join(" ")}"
