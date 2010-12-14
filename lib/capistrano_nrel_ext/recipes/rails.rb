@@ -97,7 +97,8 @@ Capistrano::Configuration.instance(true).load do
       task :finalize_update, :except => { :no_release => true } do
         all_rails_applications.each do |application_path, public_path|
           rails_shared_children.each do |shared_dir|
-            run "rm -rf #{File.join(latest_release, application_path, shared_dir)} && " +
+            run "mkdir -p #{File.join(shared_path, application_path, shared_dir)} && " +
+              "rm -rf #{File.join(latest_release, application_path, shared_dir)} && " +
               "mkdir -p #{File.dirname(File.join(latest_release, application_path, shared_dir))} && " +
               "ln -s #{File.join(shared_path, application_path, shared_dir)} #{File.join(latest_release, application_path, shared_dir)}"
           end
