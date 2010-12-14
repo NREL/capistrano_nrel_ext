@@ -2,11 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{capistrano_nrel_ext}
-  s.version = "0.1.3"
+  s.version = "0.1.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Nick Muerdter"]
-  s.date = %q{2010-12-10}
+  s.date = %q{2010-12-14}
   s.description = %q{}
   s.email = %q{nick.muerdter@nrel.gov}
   s.extra_rdoc_files = ["lib/capistrano_nrel_ext/actions/remote_tests.rb", "lib/capistrano_nrel_ext/actions/sample_files.rb", "lib/capistrano_nrel_ext/recipes/apache.rb", "lib/capistrano_nrel_ext/recipes/branches.rb", "lib/capistrano_nrel_ext/recipes/clean_slate.rb", "lib/capistrano_nrel_ext/recipes/cleanup.rb", "lib/capistrano_nrel_ext/recipes/defaults.rb", "lib/capistrano_nrel_ext/recipes/finalize_permissions.rb", "lib/capistrano_nrel_ext/recipes/gem_bundler.rb", "lib/capistrano_nrel_ext/recipes/haproxy.rb", "lib/capistrano_nrel_ext/recipes/jammit.rb", "lib/capistrano_nrel_ext/recipes/maintenance.rb", "lib/capistrano_nrel_ext/recipes/monit.rb", "lib/capistrano_nrel_ext/recipes/previous_release.rb", "lib/capistrano_nrel_ext/recipes/proxymachine.rb", "lib/capistrano_nrel_ext/recipes/rails.rb", "lib/capistrano_nrel_ext/recipes/redhat.rb", "lib/capistrano_nrel_ext/recipes/sandboxes.rb", "lib/capistrano_nrel_ext/recipes/server_ports.rb", "lib/capistrano_nrel_ext/recipes/server_process_registry.rb", "lib/capistrano_nrel_ext/recipes/servlets.rb", "lib/capistrano_nrel_ext/recipes/setup.rb", "lib/capistrano_nrel_ext/recipes/shared_children.rb", "lib/capistrano_nrel_ext/recipes/shared_children_files.rb", "lib/capistrano_nrel_ext/recipes/shared_uploads.rb", "lib/capistrano_nrel_ext/recipes/undeploy.rb"]
