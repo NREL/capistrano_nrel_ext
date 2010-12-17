@@ -95,19 +95,20 @@ Capistrano::Configuration.instance(true).load do
       # Remove the symbolic link to the monit configuration file that's in place
       # for this deployment.
       task :delete do
-        deploy.monit.stop_group
         begin
+          sudo "#{monit_init_script} stop"
+        rescue Capistrano::CommandError
+        end
+
+        monit_groups.each do |group_name, conf_file|
           begin
-            sudo "#{monit_init_script} stop"
+            sudo "monit -g #{group_name} stop all"
+            run "rm -f #{File.join(monit_conf_dir, "#{group_name}.monitrc")}"
           rescue Capistrano::CommandError
           end
-
-          monit_groups.each do |group_name, conf_file|
-            sudo "monit -g #{group_name} stop all"
-          end
-        ensure
-          sudo "#{monit_init_script} start"
         end
+
+        sudo "#{monit_init_script} start"
       end
     end
   end

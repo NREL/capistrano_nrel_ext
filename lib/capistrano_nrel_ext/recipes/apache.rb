@@ -67,7 +67,11 @@ Capistrano::Configuration.instance(true).load do
       # Remove the symbolic link to the apache configuration file that's in
       # place for this deployment.
       task :delete do
-        run "a2dissite #{deploy_name}"
+        begin
+          run "a2dissite #{deploy_name}"
+        rescue Capistrano::CommandError
+        end
+
         run "rm -f #{apache_conf_dir}/#{deploy_name}"
       end
     end
