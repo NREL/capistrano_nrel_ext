@@ -44,7 +44,7 @@ Capistrano::Configuration.instance(true).load do
 
   # Setup any shared folders that should be kept between deployments inside a
   # Rails application.
-  set :rails_shared_children, %w(log tmp/pids vendor/bundle)
+  set :rails_shared_children, %w(log tmp/pids vendor/bundle public/javascripts/compiled)
 
   # Set any folders or files that need to be writable by the Apache user inside
   # every Rails application. Since this applies to every Rails application, the

@@ -33,8 +33,18 @@ Capistrano::Configuration.instance(true).load do
         # Run the "jammit" command against all the paths that have a config file
         # inside to generate all the pre-cached files.
         jammit_paths.each do |path|
+          # If this project has javascript to compile first, run those tasks.
+          if(remote_rake_task_exists?(path, "js:compile"))
+            env = ""
+            if(exists?(:rails_env))
+              env = "RAILS_ENV=#{rails_env}"
+            end
+
+            run "cd #{path} && #{env} rake js:compile"
+          end
+
           if(remote_file_exists?(File.join(path, "config", "assets.yml")))
-            run "cd #{File.join(path)} && jammit"
+            run "cd #{path} && jammit"
           end
         end
       end
