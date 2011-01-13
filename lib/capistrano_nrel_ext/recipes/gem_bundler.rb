@@ -7,6 +7,7 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
+  before "deploy:setup", "deploy:gem_bundler:setup"
   after "deploy:update_code", "deploy:gem_bundler:install"
 
   #
@@ -14,6 +15,23 @@ Capistrano::Configuration.instance(true).load do
   #
   namespace :deploy do
     namespace :gem_bundler do
+      task :setup, :except => { :no_release => true } do
+        # Also add all the paths to Rails apps that might use Bundler.
+        if(exists?(:all_rails_applications))
+          rails_apps = all_rails_applications.collect { |application_path, public_path| application_path }
+          set(:gem_bundler_apps, gem_bundler_apps +  rails_apps)
+        end
+
+        # If no explicit bundle_dir is set, then we'll be installing bundle
+        # into each applications vendor/bundle directory. To make deployments
+        # speedy, we want that vendor/bundle directory to be a shared child
+        # across deployments.
+        if(!exists?(:bundle_dir))
+          bundle_dirs = gem_bundler_apps.collect { |application_path| File.join(application_path, "vendor", "bundle") }
+          set(:shared_children, shared_children + bundle_dirs)
+        end
+      end
+
       send :desc, <<-DESC
         Install the current Bundler environment. This is based on Bundler's \
         own capistrano task, but customized to handle our multiple \
@@ -34,16 +52,9 @@ Capistrano::Configuration.instance(true).load do
           set :bundle_cmd,      "bundle" # e.g. "/opt/ruby/bin/bundle"
       DESC
       task :install, :except => { :no_release => true } do
-        # Gather all the paths specifically defined as Bundler apps.
+        # Gather all the paths for bundler applications.
         gem_bundler_paths = gem_bundler_apps.collect do |application_path|
           File.join(latest_release, application_path)
-        end
-
-        # Also add all the paths to Rails apps that might use Bundler.
-        if(exists?(:all_rails_applications))
-          gem_bundler_paths += all_rails_applications.collect do |application_path, public_path|
-            File.join(latest_release, application_path)
-          end
         end
 
         bundle_cmd     = fetch(:bundle_cmd, "bundle")
