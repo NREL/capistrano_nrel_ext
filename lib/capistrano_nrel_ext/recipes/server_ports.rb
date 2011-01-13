@@ -1,7 +1,7 @@
 Capistrano::Configuration.instance(true).load do
   # Pick a port number to start reserving port numbers from. We'll pick
   # something relatively high to keep our stuff separate.
-  set :server_port_start, 9000
+  set :server_port_start, 60000
 
   # Keep track of the port numbers reserved during the current deployment.
   set :deployment_server_ports, []
