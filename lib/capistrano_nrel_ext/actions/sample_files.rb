@@ -1,3 +1,4 @@
+require "erubis"
 require "capistrano_nrel_ext/actions/remote_tests"
 
 # Run sample configuration files through ERB so ruby variables can be
@@ -52,7 +53,7 @@ def parse_sample_files(file_paths)
       # Parse the sample file as a Ruby file so we can evaluate
       # variables.
       content = File.read(local_sample_path)
-      parsed_content = ERB.new(content).result(binding)
+      parsed_content = Erubis::Eruby.new(content).result(binding)
 
       logger.info("Parsed sample file:\n\n")
       puts parsed_content
