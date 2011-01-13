@@ -1,11 +1,10 @@
-require "capistrano_nrel_ext/actions/remote_tests"
 require "capistrano_nrel_ext/actions/sample_files"
 
 Capistrano::Configuration.instance(true).load do
   #
   # Variables
   #
-  set :haproxy_conf_dir, "/etc/haproxy/conf.d"
+  set :haproxy_conf_dir, "/etc/haproxy/conf"
 
   #
   # Hooks 
@@ -19,7 +18,7 @@ Capistrano::Configuration.instance(true).load do
   #
   namespace :haproxy do
     desc <<-DESC
-      Restart Apache. This should be executed if new Apache configuration
+      Reload HAProxy. This should be executed if new HAProxy configuration
       files have been deployed.
     DESC
     task :reload, :roles => :app, :except => { :no_release => true } do
@@ -30,30 +29,55 @@ Capistrano::Configuration.instance(true).load do
   namespace :deploy do
     namespace :haproxy do
       desc <<-DESC
-        Create the Apache configuration file. If a sample file for the given
-        stage is present in config/apache, the sample is run through ERB (for
-        variable replacement) to create the actual config file to be used.
+        Parse any HAProxy configuration files in `config/haproxy` as ERB
+        templates.
       DESC
       task :config, :except => { :no_release => true } do
-        parse_sample_files(["config/haproxy/base.cfg", "config/haproxy/public_web.cfg"])
+        parse_sample_files(["config/haproxy"])
       end
 
       desc <<-DESC
-        Install the Apache configuration file in a system-wide directory for
-        Apache to find. This makes a symbolic link to the latest configuration
-        file for this deployment in Apache's configuration directory.
+        Install the HAProxy configuration files in a system-wide directory for
+        HAProxy to find.
       DESC
       task :install, :except => { :no_release => true } do
-        public_conf_file = File.join(latest_release, "config", "haproxy", "public_web.cfg")
-        if(remote_file_exists?(public_conf_file))
-          install_path = File.join(haproxy_conf_dir, "011-public_web-#{deploy_name}.cfg")
-          run "ln -sf #{public_conf_file} #{install_path}"
+        shared_frontends = begin
+          capture("ls -1 #{File.join(latest_release, "config", "haproxy", "shared_frontends", "*.cfg")}").to_s.split
+        rescue Capistrano::CommandError
+          []
         end
 
-        conf_file = File.join(latest_release, "config", "haproxy", "base.cfg")
-        if(remote_file_exists?(conf_file))
-          install_path = File.join(haproxy_conf_dir, "#{deploy_name}.cfg")
-          run "ln -sf #{conf_file} #{install_path}"
+        frontends = begin
+          capture("ls -1 #{File.join(latest_release, "config", "haproxy", "frontends", "*.cfg")}").to_s.split
+        rescue Capistrano::CommandError
+          []
+        end
+
+        backends = begin
+          capture("ls -1 #{File.join(latest_release, "config", "haproxy", "backends", "*.cfg")}").to_s.split
+        rescue Capistrano::CommandError
+          []
+        end
+
+        # Install the static shared frontend configuration files that may serve
+        # as the basis for other frontends to be installed.
+        shared_frontends.each do |path|
+          install_path = File.join(haproxy_conf_dir, "frontend.d", File.basename(path))
+          run "cp #{path} #{install_path}"
+        end
+
+        # Install all of this deployment's frontend configuration files.
+        frontends.each do |path|
+          install_filename = "#{File.basename(path, ".cfg")}-#{deploy_name}.cfg"
+          install_path = File.join(haproxy_conf_dir, "frontend.d", install_filename)
+          run "ln -sf #{path} #{install_path}"
+        end
+
+        # Install all of this deployment's backend configuration files.
+        backends.each do |path|
+          install_filename = "#{File.basename(path, ".cfg")}-#{deploy_name}.cfg"
+          install_path = File.join(haproxy_conf_dir, "backend.d", install_filename)
+          run "ln -sf #{path} #{install_path}"
         end
       end
     end
