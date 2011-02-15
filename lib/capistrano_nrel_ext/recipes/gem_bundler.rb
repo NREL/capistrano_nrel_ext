@@ -4,6 +4,26 @@ Capistrano::Configuration.instance(true).load do
   #
   set :gem_bundler_apps, []
 
+  _cset :bundle_gemfile, "Gemfile"
+  _cset :bundle_dir, "vendor/bundle"
+  _cset :bundle_cmd, "bundle"
+
+  _cset(:bundle_without) do
+    if(stage == :development)
+      [:test]
+    else
+      [:development, :test]
+    end
+  end
+
+  _cset(:bundle_flags) do
+    if(stage == :development)
+      "--quiet"
+    else
+      "--deployment --quiet"
+    end
+  end
+
   #
   # Hooks
   #
@@ -19,7 +39,7 @@ Capistrano::Configuration.instance(true).load do
         # Also add all the paths to Rails apps that might use Bundler.
         if(exists?(:all_rails_applications))
           rails_apps = all_rails_applications.collect { |application_path, public_path| application_path }
-          set(:gem_bundler_apps, gem_bundler_apps +  rails_apps)
+          set(:gem_bundler_apps, gem_bundler_apps + rails_apps)
         end
 
         # If no explicit bundle_dir is set, then we'll be installing bundle
@@ -57,21 +77,18 @@ Capistrano::Configuration.instance(true).load do
           File.join(latest_release, application_path)
         end
 
-        bundle_cmd     = fetch(:bundle_cmd, "bundle")
-        bundle_flags   = fetch(:bundle_flags, "--deployment --quiet")
         bundle_gemfile = fetch(:bundle_gemfile, "Gemfile")
-        bundle_without = [*fetch(:bundle_without, [:development, :test])].compact
 
         gem_bundler_paths.each do |full_application_path|
           gemfile_path = File.join(full_application_path, bundle_gemfile)
 
           if(remote_file_exists?(gemfile_path))
-            bundle_dir     = fetch(:bundle_dir, File.join(full_application_path, "vendor", "bundle"))
+            bundle_path = File.join(full_application_path, bundle_dir)
 
             args = ["--gemfile #{gemfile_path}"]
-            args << "--path #{bundle_dir}" unless bundle_dir.to_s.empty?
+            args << "--path #{bundle_path}" unless bundle_path.to_s.empty?
             args << bundle_flags.to_s
-            args << "--without #{bundle_without.join(" ")}" unless bundle_without.empty?
+            args << "--without #{bundle_without.compact.join(" ")}" unless bundle_without.empty?
 
             run "#{bundle_cmd} install #{args.join(' ')}"
           end
