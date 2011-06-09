@@ -51,12 +51,11 @@ Capistrano::Configuration.instance(true).load do
       DESC
       task :reload, :roles => :app, :except => { :no_release => true } do
         # Stop all the programs that belong to this deployment's supervisor
-        # group.
-        sudo "#{supervisorctl} stop #{deploy_name}"
-
-        # Reload all the configuration files. Any processes marked as autostart
-        # should then automatically start up.
+        # group. Reread the supervisor configuration. Then start this
+        # deployment's group again.
+        sudo "#{supervisorctl} stop '#{deploy_name}:*'"
         sudo "#{supervisorctl} reread"
+        sudo "#{supervisorctl} start '#{deploy_name}:*'"
       end
     end
   end

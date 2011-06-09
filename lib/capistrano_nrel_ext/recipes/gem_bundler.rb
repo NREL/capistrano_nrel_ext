@@ -42,14 +42,11 @@ Capistrano::Configuration.instance(true).load do
           set(:gem_bundler_apps, gem_bundler_apps + rails_apps)
         end
 
-        # If no explicit bundle_dir is set, then we'll be installing bundle
-        # into each applications vendor/bundle directory. To make deployments
-        # speedy, we want that vendor/bundle directory to be a shared child
-        # across deployments.
-        if(!exists?(:bundle_dir))
-          bundle_dirs = gem_bundler_apps.collect { |application_path| File.join(application_path, "vendor", "bundle") }
-          set(:shared_children, shared_children + bundle_dirs)
-        end
+        # We'll be installing bundle into each applications vendor/bundle
+        # directory. To make deployments speedy, we want that vendor/bundle
+        # directory to be a shared child across deployments.
+        bundle_dirs = gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
+        set(:shared_children, shared_children + bundle_dirs)
       end
 
       send :desc, <<-DESC
