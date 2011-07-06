@@ -47,7 +47,8 @@ Capistrano::Configuration.instance(true).load do
               env = "RAILS_ENV=#{rails_env}"
             end
 
-            run "cd #{full_application_path} && #{env} rake js:compile"
+            bundle = "bundle exec" if(remote_file_exists?(File.join(full_application_path, "Gemfile")))
+            run "cd #{full_application_path} && #{env} #{bundle} rake js:compile"
           end
 
           # Compress things with Jammit.
