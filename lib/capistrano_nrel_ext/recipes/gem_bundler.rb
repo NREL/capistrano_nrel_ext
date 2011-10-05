@@ -10,7 +10,7 @@ Capistrano::Configuration.instance(true).load do
 
   _cset(:bundle_without) do
     if(stage == :development)
-      [:test]
+      []
     else
       [:development, :test]
     end
@@ -18,17 +18,26 @@ Capistrano::Configuration.instance(true).load do
 
   _cset(:bundle_flags) do
     if(stage == :development)
-      "--quiet"
+      ""
     else
-      "--deployment --quiet"
+      "--deployment"
     end
   end
+
+  set :bundle_exec, lambda { "#{bundle_cmd} exec" }
+  set :rake, lambda { "#{bundle_exec} rake" }
 
   #
   # Hooks
   #
   before "deploy:setup", "deploy:gem_bundler:setup"
   after "deploy:update_code", "deploy:gem_bundler:install"
+
+  #
+  # Dependencies
+  #
+  depend(:remote, :gem, "bundler", ">= 1.0.0")
+  depend(:remote, :command, "bundle")
 
   #
   # Tasks
@@ -73,8 +82,6 @@ Capistrano::Configuration.instance(true).load do
         gem_bundler_paths = gem_bundler_apps.collect do |application_path|
           File.join(latest_release, application_path)
         end
-
-        bundle_gemfile = fetch(:bundle_gemfile, "Gemfile")
 
         gem_bundler_paths.each do |full_application_path|
           gemfile_path = File.join(full_application_path, bundle_gemfile)

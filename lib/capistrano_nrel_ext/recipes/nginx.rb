@@ -14,7 +14,9 @@ Capistrano::Configuration.instance(true).load do
   # Hooks 
   #
   after "deploy:update_code", "deploy:nginx:config"
+  before "deploy:start", "deploy:nginx:install"
   before "deploy:restart", "deploy:nginx:install"
+  after "deploy:start", "nginx:reload"
   after "deploy:restart", "nginx:reload"
   before "undeploy:delete", "undeploy:nginx:delete"
   after "undeploy", "nginx:reload"
@@ -39,7 +41,7 @@ Capistrano::Configuration.instance(true).load do
         stage is present in config/nginx, the sample is run through ERB (for
         variable replacement) to create the actual config file to be used.
       DESC
-      task :config, :except => { :no_release => true } do
+      task :config, :roles => :app, :except => { :no_release => true } do
         parse_sample_files(["config/nginx"])
       end
 
@@ -48,7 +50,7 @@ Capistrano::Configuration.instance(true).load do
         Nginx to find. This makes a symbolic link to the latest configuration
         file for this deployment in Nginx's configuration directory.
       DESC
-      task :install, :except => { :no_release => true } do
+      task :install, :roles => :app, :except => { :no_release => true } do
         conf_file = "#{latest_release}/config/nginx/#{stage}.conf"
         if(remote_file_exists?(conf_file))
           run "ln -sf #{conf_file} #{nginx_conf_dir}/#{deploy_name}"

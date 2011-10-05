@@ -13,7 +13,9 @@ Capistrano::Configuration.instance(true).load do
   # Hooks 
   #
   after "deploy:update_code", "deploy:apache:config"
+  before "deploy:start", "deploy:apache:install"
   before "deploy:restart", "deploy:apache:install"
+  after "deploy:start", "apache:reload"
   after "deploy:restart", "apache:reload"
   before "undeploy:delete", "undeploy:apache:delete"
   after "undeploy", "apache:reload"

@@ -8,7 +8,7 @@ Capistrano::Configuration.instance(true).load do
     end
 
     # Kill any default tasks we don't want at all.
-    [:restart, :migrate].each do |default_task|
+    [:start, :stop, :restart, :migrate].each do |default_task|
       desc <<-DESC
         Default task overriden to do nothing.
       DESC

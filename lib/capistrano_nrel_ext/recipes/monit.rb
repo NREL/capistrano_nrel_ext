@@ -13,6 +13,7 @@ Capistrano::Configuration.instance(true).load do
   # Hooks 
   #
   after "deploy:update_code", "deploy:monit:config"
+  before "deploy:start", "deploy:monit:reload"
   before "deploy:restart", "deploy:monit:reload"
   before "undeploy:delete", "undeploy:monit:delete"
 

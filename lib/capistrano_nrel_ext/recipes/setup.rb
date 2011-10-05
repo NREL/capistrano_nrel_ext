@@ -6,6 +6,7 @@ Capistrano::Configuration.instance(true).load do
   # Always run setup and check before deployment, since it's nondestructive and
   # means one less step.
   before "deploy", "deploy:try_setup", "deploy:check"
+  before "deploy:cold", "deploy:try_setup", "deploy:check"
 
   #
   # Tasks

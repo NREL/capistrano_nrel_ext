@@ -80,6 +80,21 @@ Capistrano::Configuration.instance(true).load do
   # Tasks
   #
   namespace :deploy do
+    task :cold do
+      update
+      schema_load
+      start
+    end
+
+    task :schema_load, :roles => :db, :only => { :primary => true } do
+      rake = fetch(:rake, "rake")
+
+      all_rails_applications.each do |application_path, public_path|
+        app_directory = File.join(latest_release, application_path)
+        run "cd #{app_directory}; #{rake} RAILS_ENV=#{rails_env}_migrations db:schema:load"
+      end
+    end
+
     namespace :rails do
       task :setup, :except => { :no_release => true } do
         dirs = []
@@ -137,6 +152,8 @@ Capistrano::Configuration.instance(true).load do
 
       namespace :gems do
         task :install, :except => { :no_release => true } do
+          rake = fetch(:rake, "rake")
+
           all_rails_applications.each do |application_path, public_path|
             if(remote_file_exists?(File.join(latest_release, application_path, "Rakefile")))
               # Only run the old gem install command if no Gemfile exists.

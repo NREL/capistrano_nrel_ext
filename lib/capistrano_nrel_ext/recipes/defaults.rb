@@ -3,6 +3,7 @@
 # destination server.
 require "capistrano_nrel_ext/recipes/clean_slate"
 require "capistrano_nrel_ext/recipes/cleanup"
+require "capistrano_nrel_ext/recipes/deployed_config"
 require "capistrano_nrel_ext/recipes/finalize_permissions"
 require "capistrano_nrel_ext/recipes/setup"
 require "capistrano_nrel_ext/recipes/shared_children"

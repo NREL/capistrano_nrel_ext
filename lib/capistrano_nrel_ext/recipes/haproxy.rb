@@ -10,7 +10,9 @@ Capistrano::Configuration.instance(true).load do
   # Hooks 
   #
   after "deploy:update_code", "deploy:haproxy:config"
+  before "deploy:start", "deploy:haproxy:install"
   before "deploy:restart", "deploy:haproxy:install"
+  after "deploy:start", "haproxy:reload"
   after "deploy:restart", "haproxy:reload"
 
   #

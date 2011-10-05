@@ -13,12 +13,6 @@ Capistrano::Configuration.instance(true).load do
   after "deploy:update_code", "deploy:jammit:precache"
 
   #
-  # Dependencies
-  #
-  depend(:remote, :gem, "jammit", ">= 0.4.4")
-  depend(:remote, :command, "jammit")
-
-  #
   # Tasks
   #
   namespace :deploy do
@@ -37,6 +31,9 @@ Capistrano::Configuration.instance(true).load do
         Precache and compress asset files using Jammit.
       DESC
       task :precache, :except => { :no_release => true } do
+        rake = fetch(:rake, "rake")
+        bundle_exec = fetch(:bundle_exec, "")
+
         jammit_apps.each do |application_path|
           full_application_path = File.join(latest_release, application_path)
 
@@ -47,15 +44,25 @@ Capistrano::Configuration.instance(true).load do
               env = "RAILS_ENV=#{rails_env}"
             end
 
-            bundle = "bundle exec" if(remote_file_exists?(File.join(full_application_path, "Gemfile")))
-            run "cd #{full_application_path} && #{env} #{bundle} rake js:compile"
+            run "cd #{full_application_path}; #{rake} #{env} js:compile"
+          end
+
+          # If this project uses Compass stylesheets, compile those first.
+          compass_config_path = File.join(full_application_path, "config", "compass.rb")
+          if remote_file_exists?(compass_config_path)
+            run "cd #{full_application_path} && " +
+              "#{bundle_exec} compass compile"
           end
 
           # Compress things with Jammit.
-          if(remote_file_exists?(File.join(full_application_path, "config", "assets.yml")))
-            assets_cached_path = File.join(shared_path, application_path, "public", "assets")
-            assets_temp_output_path = File.join(shared_path, application_path, "public", "assets-temp-#{release_name}")
-            assets_release_path = File.join(full_application_path, "public", "assets")
+          config_path = File.join(full_application_path, "config", "assets.yml")
+          if remote_file_exists?(config_path)
+            get_package_path_script = 'require "bundler/setup"; require "jammit"; Jammit.load_configuration("config/assets.yml"); puts Jammit.package_path;'
+            package_path = capture("cd #{full_application_path} && ruby -e '#{get_package_path_script}' -W0").strip
+
+            assets_cached_path = File.join(shared_path, application_path, "public", package_path)
+            assets_temp_output_path = File.join(shared_path, application_path, "public", "#{package_path}-temp-#{release_name}")
+            assets_release_path = File.join(full_application_path, "public", package_path)
 
             # 1. Do a full jammit compression into a temporary folder.
             # 2. Synchronize the new assets into a shared folder that's kept between
@@ -73,7 +80,7 @@ Capistrano::Configuration.instance(true).load do
             # All of this ensures that timestamps are only updated when needed,
             # and assets don't go live too soon, as well as roll back properly.
             run "cd #{full_application_path} && " +
-              "jammit --output #{assets_temp_output_path} && " +
+              "#{bundle_exec} jammit --output #{assets_temp_output_path} && " +
               "rsync -rc --delete-delay #{assets_temp_output_path}/ #{assets_cached_path} && " +
               "rsync -rtc #{assets_cached_path}/ #{assets_release_path} && " +
               "rm -rf #{assets_temp_output_path}"

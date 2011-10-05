@@ -151,6 +151,7 @@ Capistrano::Configuration.instance(true).load do
   # Hooks 
   #
   after "deploy:update_code", "deploy:server_process_registry_tasks:config"
+  before "deploy:start", "deploy:server_process_registry_tasks:install"
   before "deploy:restart", "deploy:server_process_registry_tasks:install"
 
   #
