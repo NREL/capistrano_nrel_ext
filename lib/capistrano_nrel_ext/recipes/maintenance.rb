@@ -28,7 +28,9 @@ Capistrano::Configuration.instance(true).load do
         Further customization will require that you write your own task.
       DESC
       task :disable, :roles => :web, :except => { :no_release => true } do
-        require "active_support" # For time zone support
+        # For time zone support
+        require "active_support"
+        require "active_support/core_ext"
 
         on_rollback { run "rm -f #{shared_path}/public/system/maintenance.html && rm -f #{shared_path}/public/system/maintenance_#{maintenance_type}" }
 
