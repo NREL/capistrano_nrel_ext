@@ -57,7 +57,7 @@ Capistrano::Configuration.instance(true).load do
           # Compress things with Jammit.
           config_path = File.join(full_application_path, "config", "assets.yml")
           if remote_file_exists?(config_path)
-            get_package_path_script = 'require "bundler/setup"; require "jammit"; Jammit.load_configuration("config/assets.yml"); puts Jammit.package_path;'
+            get_package_path_script = 'require "rubygems"; require "bundler/setup"; require "jammit"; Jammit.load_configuration("config/assets.yml"); puts Jammit.package_path;'
             package_path = capture("cd #{full_application_path} && ruby -e '#{get_package_path_script}' -W0").strip
 
             assets_cached_path = File.join(shared_path, application_path, "public", package_path)
