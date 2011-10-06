@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "capistrano_nrel_ext"
 
+  s.add_dependency("activesupport", [">= 2.3.0"])
   s.add_dependency("capistrano", ["~> 2.5"])
   s.add_dependency("erubis", ["~> 2.6"])
 
