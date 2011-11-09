@@ -87,10 +87,15 @@ Capistrano::Configuration.instance(true).load do
     end
 
     task :schema_load, :roles => :db, :only => { :primary => true } do
-      rake = fetch(:rake, "rake")
-
       all_rails_applications.each do |application_path, public_path|
+        rake = fetch(:rake, "rake")
         app_directory = File.join(latest_release, application_path)
+
+        if(remote_file_exists?(File.join(app_directory, "Gemfile")))
+          bundle_exec = fetch(:bundle_exec, "")
+          rake = "#{bundle_exec} rake"
+        end
+
         run "cd #{app_directory}; #{rake} RAILS_ENV=#{rails_env}_migrations db:schema:load"
       end
     end
@@ -152,16 +157,22 @@ Capistrano::Configuration.instance(true).load do
 
       namespace :gems do
         task :install, :except => { :no_release => true } do
-          rake = fetch(:rake, "rake")
-
           all_rails_applications.each do |application_path, public_path|
-            if(remote_file_exists?(File.join(latest_release, application_path, "Rakefile")))
+            rake = fetch(:rake, "rake")
+            app_directory = File.join(latest_release, application_path)
+
+            if(remote_file_exists?(File.join(app_directory, "Rakefile")))
+              if(remote_file_exists?(File.join(app_directory, "Gemfile")))
+                bundle_exec = fetch(:bundle_exec, "")
+                rake = "#{bundle_exec} rake"
+              end
+
               # Only run the old gem install command if no Gemfile exists.
               if(!remote_file_exists?(File.join(latest_release, application_path, "Gemfile")))
                 run "cd #{File.join(latest_release, application_path)} && " +
-                  "RAILS_ENV=#{rails_env} rake gems:install && " +
-                  "RAILS_ENV=#{rails_env} rake gems:unpack:dependencies && " +
-                  "RAILS_ENV=#{rails_env} rake gems:build"
+                  "RAILS_ENV=#{rails_env} #{rake} gems:install && " +
+                  "RAILS_ENV=#{rails_env} #{rake} gems:unpack:dependencies && " +
+                  "RAILS_ENV=#{rails_env} #{rake} gems:build"
               end
             end
           end

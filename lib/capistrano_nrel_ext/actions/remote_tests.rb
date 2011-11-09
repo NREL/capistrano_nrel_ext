@@ -35,6 +35,11 @@ end
 def remote_rake_task_exists?(rake_root, task)
   if(remote_file_exists?(File.join(rake_root, "Rakefile")))
     rake = fetch(:rake, "rake")
+    if(remote_file_exists?(File.join(rake_root, "Gemfile")))
+      bundle_exec = fetch(:bundle_exec, "")
+      rake = "#{bundle_exec} rake"
+    end
+
     remote_command_has_output?("cd #{rake_root}; #{rake} --silent --describe #{task} 2> /dev/null")
   else
     false

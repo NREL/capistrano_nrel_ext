@@ -31,11 +31,20 @@ Capistrano::Configuration.instance(true).load do
         Precache and compress asset files using Jammit.
       DESC
       task :precache, :except => { :no_release => true } do
-        rake = fetch(:rake, "rake")
-        bundle_exec = fetch(:bundle_exec, "")
-
         jammit_apps.each do |application_path|
           full_application_path = File.join(latest_release, application_path)
+
+          # Optionally execute everything through gem bundler. This is the
+          # preferred setup, but in some of our older apps, we don't have
+          # bundler setup and instead rely on the command being installed on
+          # the system.
+          rake = fetch(:rake, "rake")
+          bundle_exec = ""
+          gemfile_path = File.join(full_application_path, "Gemfile")
+          if remote_file_exists?(gemfile_path)
+            bundle_exec = fetch(:bundle_exec, "")
+            rake = "#{bundle_exec} rake"
+          end
 
           # If this project has javascript to compile first, run those tasks.
           if(remote_rake_task_exists?(full_application_path, "js:compile"))

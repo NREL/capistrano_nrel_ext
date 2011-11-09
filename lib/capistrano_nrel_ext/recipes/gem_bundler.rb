@@ -25,7 +25,6 @@ Capistrano::Configuration.instance(true).load do
   end
 
   set :bundle_exec, lambda { "#{bundle_cmd} exec" }
-  set :rake, lambda { "#{bundle_exec} rake" }
 
   #
   # Hooks
