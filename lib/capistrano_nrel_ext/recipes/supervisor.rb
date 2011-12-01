@@ -49,12 +49,14 @@ Capistrano::Configuration.instance(true).load do
       end
 
       desc <<-DESC
-        Reload Monit configuration.
+        Reload Supervisor configuration.
       DESC
       task :reload, :roles => :app, :except => { :no_release => true } do
-        # Sending the update command should intelligently read an new
-        # configuration changes, and start or restart things as necessary.
+        # Have supervisor reload it's configuration and then we'll restart this
+        # process group so the latest copy of the program is running after
+        # deployment.
         sudo "#{supervisorctl} update"
+        sudo "#{supervisorctl} restart '#{deploy_name}:*'"
       end
     end
   end
