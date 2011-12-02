@@ -26,22 +26,6 @@ Capistrano::Configuration.instance(true).load do
   # be deployed to.
   set :rails_applications, {}
 
-  # Create a hash of Rails applications that use delayed_job. This is used so we
-  # can configure Monit to startup and monitor the delayed_job script.
-  set(:rails_delayed_job_applications) do
-    apps = {}
-    all_rails_applications.each do |application_path, public_path|
-      # Only include applications that have a delayed_job script.
-      if(remote_file_exists?(File.join(latest_release, application_path, "script", "delayed_job")))
-        # Make the key of this hash a name we can use inside the Monit
-        # configuration file to name the process for this specific application.
-        apps[application_path.gsub("/", "_")] = application_path
-      end
-    end
-
-    apps
-  end
-
   # Setup any shared folders that should be kept between deployments inside a
   # Rails application.
   set :rails_shared_children, %w(log tmp/pids vendor/bundle public/javascripts/compiled)

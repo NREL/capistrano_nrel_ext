@@ -1,6 +1,10 @@
 require "capistrano_nrel_ext/actions/remote_tests"
 require "capistrano_nrel_ext/actions/sample_files"
 
+# DEPRECATED: None of the actions in this monit recipe do anything. We're no longer
+# using monit, but deployment scripts in old branches might still reference it.
+# The quick-fix is to simply make this non-functional so it doesn't cause any
+# failures.
 Capistrano::Configuration.instance(true).load do
   #
   # Variables
@@ -28,65 +32,17 @@ Capistrano::Configuration.instance(true).load do
   namespace :deploy do
     namespace :monit do
       desc <<-DESC
-        Create the Monit configuration file. If a sample file for the given stage
-        is present in config/monit, the sample is run through ERB (for variable
-        replacement) to create the actual config file to be used.
+        Does nothing
       DESC
       task :config, :except => { :no_release => true } do
-        monit_groups.each do |group_name, conf_file|
-          set :monit_group_name, group_name
-          parse_sample_files(conf_file)
-        end
+        # Does nothing (see comments at top of file)
       end
 
       desc <<-DESC
-        Reload Monit configuration.
+        Does nothing
       DESC
       task :reload, :roles => :app, :except => { :no_release => true } do
-        # Reloading monit gets a wee bit ugly. We want to stop all group
-        # processes, reload the configuration, and then start all group
-        # processes. Reloading this way accounts for any new additions or
-        # subtractions that might be inside the monit config files.
-        
-        begin
-          # Stop the monit daemon. This lets the monit stop group command below
-          # happen synchronously. If the daemon is running during the group
-          # stop command, it gets backgrounded, and then the next call to
-          # reload the configuration happens immediately, before the processes
-          # may have stopped.
-          sudo "#{monit_init_script} stop"
-        rescue Capistrano::CommandError
-        end
-
-        # With the monit daemon stopped, these group start and stop commands
-        # now happen synchronously, so we can reliably stop all processes, put
-        # in our new configuration file, and then start all processes using
-        # that new config file.
-        monit_groups.each do |group_name, conf_file|
-          conf_file_path = File.join(latest_release, conf_file)
-          if(remote_file_exists?(conf_file_path))
-            begin
-              begin
-                run "sudo monit -g #{group_name} stop all"
-              rescue Capistrano::CommandError
-              end
-
-              run "ln -sf #{conf_file_path} #{File.join(monit_conf_dir, "#{group_name}.monitrc")} && " +
-                "sudo monit -g #{group_name} start all"
-            rescue Capistrano::CommandError
-            end
-          end
-        end
-
-        # Bring the monit daemon back up.
-        sudo "#{monit_init_script} start"
-
-        # Since the daemon was down while we added new groups, it might not be
-        # monitoring them. This group should already be up, but we'll just be
-        # sure monit knows about it.
-        monit_groups.each do |group_name, files|
-          sudo "monit -g #{group_name} start all"
-        end
+        # Does nothing (see comments at top of file)
       end
     end
   end
@@ -96,20 +52,7 @@ Capistrano::Configuration.instance(true).load do
       # Remove the symbolic link to the monit configuration file that's in place
       # for this deployment.
       task :delete do
-        begin
-          sudo "#{monit_init_script} stop"
-        rescue Capistrano::CommandError
-        end
-
-        monit_groups.each do |group_name, conf_file|
-          begin
-            sudo "monit -g #{group_name} stop all"
-            run "rm -f #{File.join(monit_conf_dir, "#{group_name}.monitrc")}"
-          rescue Capistrano::CommandError
-          end
-        end
-
-        sudo "#{monit_init_script} start"
+        # Does nothing (see comments at top of file)
       end
     end
   end
