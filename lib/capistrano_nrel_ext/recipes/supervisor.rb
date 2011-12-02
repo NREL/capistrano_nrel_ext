@@ -41,7 +41,14 @@ Capistrano::Configuration.instance(true).load do
         the system Supervisor directory.
       DESC
       task :install, :roles => :app, :except => { :no_release => true } do
-        conf_files = capture("ls -x #{latest_release}/config/supervisor/*.conf").split
+        conf_files = []
+
+        begin
+          conf_files = capture("ls -x #{latest_release}/config/supervisor/*.conf").split
+        rescue Capistrano::CommandError
+          logger.info("Supervisor config files don't exist - Skipping")
+        end
+
         conf_files.each do |conf_file|
           install_filename = "#{deploy_name}-#{File.basename(conf_file)}"
           run "ln -sf #{conf_file} #{File.join(supervisor_conf_dir, install_filename)}"
@@ -52,11 +59,18 @@ Capistrano::Configuration.instance(true).load do
         Reload Supervisor configuration.
       DESC
       task :reload, :roles => :app, :except => { :no_release => true } do
-        # Have supervisor reload it's configuration and then we'll restart this
-        # process group so the latest copy of the program is running after
-        # deployment.
-        sudo "#{supervisorctl} update"
-        sudo "#{supervisorctl} restart '#{deploy_name}:*'"
+        # FIXME: This check is only needed while we're still deploying some old
+        # branches haven't been updated. We want to be able to deploy older
+        # branches, from our newer deployment recipes, but the older branches
+        # won't have the supervisor files there. Remove once all branches have
+        # been updated with supervisor config.
+        if(remote_directory_exists?(File.join(latest_release, "config", "supervisor")))
+          # Have supervisor reload it's configuration and then we'll restart this
+          # process group so the latest copy of the program is running after
+          # deployment.
+          sudo "#{supervisorctl} update"
+          sudo "#{supervisorctl} restart '#{deploy_name}:*'"
+        end
       end
     end
   end
