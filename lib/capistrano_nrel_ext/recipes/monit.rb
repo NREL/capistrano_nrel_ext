@@ -24,7 +24,7 @@ Capistrano::Configuration.instance(true).load do
   #
   # Dependencies
   #
-  depend(:remote, :directory, monit_conf_dir)
+  # depend(:remote, :directory, monit_conf_dir)
 
   #
   # Tasks
