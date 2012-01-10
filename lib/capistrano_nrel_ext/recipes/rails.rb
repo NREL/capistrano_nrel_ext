@@ -80,7 +80,9 @@ Capistrano::Configuration.instance(true).load do
           rake = "#{bundle_exec} rake"
         end
 
-        run "cd #{app_directory}; #{rake} RAILS_ENV=#{rails_env}_migrations db:schema:load"
+        env = "RAILS_ENV=#{rails_env}_migrations"
+
+        run "cd #{app_directory}; #{env} #{rake} db:schema:load"
       end
     end
 
@@ -151,12 +153,14 @@ Capistrano::Configuration.instance(true).load do
                 rake = "#{bundle_exec} rake"
               end
 
+              env = "RAILS_ENV=#{rails_env}"
+
               # Only run the old gem install command if no Gemfile exists.
               if(!remote_file_exists?(File.join(latest_release, application_path, "Gemfile")))
                 run "cd #{File.join(latest_release, application_path)} && " +
-                  "RAILS_ENV=#{rails_env} #{rake} gems:install && " +
-                  "RAILS_ENV=#{rails_env} #{rake} gems:unpack:dependencies && " +
-                  "RAILS_ENV=#{rails_env} #{rake} gems:build"
+                  "#{env} #{rake} gems:install && " +
+                  "#{env} #{rake} gems:unpack:dependencies && " +
+                  "#{env} #{rake} gems:build"
               end
             end
           end

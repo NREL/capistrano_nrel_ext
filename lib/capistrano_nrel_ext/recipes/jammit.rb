@@ -46,21 +46,21 @@ Capistrano::Configuration.instance(true).load do
             rake = "#{bundle_exec} rake"
           end
 
+          env = ""
+          if(exists?(:rails_env))
+            env = "RAILS_ENV=#{rails_env}"
+          end
+
           # If this project has javascript to compile first, run those tasks.
           if(remote_rake_task_exists?(full_application_path, "js:compile"))
-            env = ""
-            if(exists?(:rails_env))
-              env = "RAILS_ENV=#{rails_env}"
-            end
-
-            run "cd #{full_application_path}; #{rake} #{env} js:compile"
+            run "cd #{full_application_path}; #{env} #{rake} js:compile"
           end
 
           # If this project uses Compass stylesheets, compile those first.
           compass_config_path = File.join(full_application_path, "config", "compass.rb")
           if remote_file_exists?(compass_config_path)
             run "cd #{full_application_path} && " +
-              "#{bundle_exec} compass compile"
+              "#{env} #{bundle_exec} compass compile"
           end
 
           # Compress things with Jammit.
@@ -89,7 +89,7 @@ Capistrano::Configuration.instance(true).load do
             # All of this ensures that timestamps are only updated when needed,
             # and assets don't go live too soon, as well as roll back properly.
             run "cd #{full_application_path} && " +
-              "#{bundle_exec} jammit --output #{assets_temp_output_path} && " +
+              "#{env} #{bundle_exec} jammit --output #{assets_temp_output_path} && " +
               "rsync -rc --delete-delay #{assets_temp_output_path}/ #{assets_cached_path} && " +
               "rsync -rtc #{assets_cached_path}/ #{assets_release_path} && " +
               "rm -rf #{assets_temp_output_path}"

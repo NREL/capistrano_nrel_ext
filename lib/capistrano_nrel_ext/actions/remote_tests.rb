@@ -40,7 +40,12 @@ def remote_rake_task_exists?(rake_root, task)
       rake = "#{bundle_exec} rake"
     end
 
-    remote_command_has_output?("cd #{rake_root}; #{rake} --silent --describe #{task} 2> /dev/null")
+    env = ""
+    if(exists?(:rails_env))
+      env = "RAILS_ENV=#{rails_env}"
+    end
+
+    remote_command_has_output?("cd #{rake_root}; #{env} #{rake} --silent --describe #{task} 2> /dev/null")
   else
     false
   end
