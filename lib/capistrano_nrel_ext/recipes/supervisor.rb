@@ -7,6 +7,7 @@ Capistrano::Configuration.instance(true).load do
   #
   set :supervisor_conf_dir, "/etc/supervisord.d"
   set :supervisorctl, "supervisorctl"
+  set :supervisorctl_rolling_restart, "/usr/local/bin/supervisorctl_rolling_restart"
 
   #
   # Hooks
@@ -69,7 +70,12 @@ Capistrano::Configuration.instance(true).load do
           # process group so the latest copy of the program is running after
           # deployment.
           sudo "#{supervisorctl} update"
-          sudo "#{supervisorctl} restart '#{deploy_name}:*'"
+
+          if(remote_file_exists?(supervisorctl_rolling_restart))
+            sudo "#{supervisorctl_rolling_restart} '#{deploy_name}'"
+          else
+            sudo "#{supervisorctl} restart '#{deploy_name}:*'"
+          end
         end
       end
     end
