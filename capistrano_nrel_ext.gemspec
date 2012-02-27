@@ -14,9 +14,10 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "capistrano_nrel_ext"
 
-  s.add_dependency("activesupport", [">= 2.3.0"])
-  s.add_dependency("capistrano", ["~> 2.5"])
-  s.add_dependency("erubis", ["~> 2.6"])
+  s.add_dependency("capistrano", [">= 2.5"])
+  s.add_dependency("chronic", [">= 0.6.0"])
+  s.add_dependency("erubis", [">= 2.6.0"])
+  s.add_dependency("tzinfo", [">= 0.3.0"])
 
   s.files         = Dir.glob("lib/**/*")
   s.require_paths = ["lib"]

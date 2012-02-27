@@ -1,3 +1,6 @@
+require "chronic"
+require "tzinfo"
+
 require "capistrano_nrel_ext/actions/sample_files"
 
 Capistrano::Configuration.instance(true).load do
@@ -5,6 +8,9 @@ Capistrano::Configuration.instance(true).load do
   # Variables
   #
   set :maintenance_type, "general"
+  set :maintenance_reason, "maintenance"
+  set :maintenance_starting, ""
+  set :maintenance_ending, "shortly"
 
   #
   # Tasks
@@ -28,10 +34,6 @@ Capistrano::Configuration.instance(true).load do
         Further customization will require that you write your own task.
       DESC
       task :disable, :roles => :web, :except => { :no_release => true } do
-        # For time zone support
-        require "active_support"
-        require "active_support/core_ext"
-
         on_rollback { run "rm -f #{shared_path}/public/system/maintenance.html && rm -f #{shared_path}/public/system/maintenance_#{maintenance_type}" }
 
         warn <<-EOHTACCESS
@@ -47,12 +49,47 @@ Capistrano::Configuration.instance(true).load do
           RewriteRule ^.*$  -  [redirect=503,last]
         EOHTACCESS
 
-        reason = ENV['REASON']
-        deadline = ENV['UNTIL']
+        if ENV["REASON"]
+          set(:maintenance_reason, ENV["REASON"])
+        end
 
-        parse_sample_files(["config/templates/maintenance.html"])
-        run "mv #{File.join(latest_release, "config", "templates", "maintenance.html")} #{File.join(shared_path, "public", "system", "maintenance.html")}"
-        run "touch #{File.join(shared_path, "public", "system", "maintenance_#{maintenance_type}")}"
+        # Give all times in the Eastern time zone (since more people are
+        # probably used to seeing it than mountain).
+        time_zone = TZInfo::Timezone.get("America/New_York")
+        time_format = "%A, %B %e, %Y, %l:%M %p %Z"
+
+        # If a custom end time is given in the UNTIL environment variable, use
+        # chronic to parse it, so it can be given in more natural terms, but we
+        # can convert it to a true time in the eastern time zone.
+        if ENV["UNTIL"]
+          parsed_time = Chronic.parse(ENV["UNTIL"])
+          if parsed_time
+            set(:maintenance_ending, time_zone.strftime(time_format, parsed_time.utc))
+          else
+            raise Capistrano::Error, "Unable to parse `UNTIL` variable: #{ENV["UNTIL"].inspect}. UNTIL should be a local time string, e.g., \"8PM\" or \"01/28/2012 8:00PM\""
+          end
+        end
+
+        # Estimate the starting time for display in the confirmation message.
+        set(:maintenance_starting, time_zone.strftime(time_format, Time.now.utc))
+
+        logger.info("\nMaintenance Reason: #{maintenance_reason.inspect}")
+        logger.info("Maintenance Starting: #{maintenance_starting.inspect}")
+        logger.info("Maintenance Estimated Ending: #{maintenance_ending.inspect}\n\n")
+
+        confirm = Capistrano::CLI.ui.ask("Are you sure you want to put the website into maintenance mode? (y/n) ") do |q|
+          q.default = "n"
+        end.downcase
+
+        if(confirm == "y")
+          # Redefine the starting time (in case the original estimate is now
+          # wrong from the user sitting at the y/n prompt for a long time).
+          set(:maintenance_starting, time_zone.strftime(time_format, Time.now.utc))
+
+          parse_sample_files(["config/templates/maintenance.html"])
+          run "mv #{File.join(latest_release, "config", "templates", "maintenance.html")} #{File.join(shared_path, "public", "system", "maintenance.html")}"
+          run "touch #{File.join(shared_path, "public", "system", "maintenance_#{maintenance_type}")}"
+        end
       end
 
       desc <<-DESC

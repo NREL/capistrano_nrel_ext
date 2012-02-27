@@ -40,8 +40,6 @@ def parse_sample_files(file_paths)
     rescue Capistrano::CommandError
     end
 
-    puts "REMOTE SAMPLE PATHS: #{remote_sample_paths.inspect}"
-
     remote_sample_paths.each do |remote_sample_path|
       # Download the sample path from the server. We want to grab the copy from
       # the server, and not the local copy, since they may differ (If I'm doing
