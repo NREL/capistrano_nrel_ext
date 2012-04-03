@@ -35,7 +35,7 @@ Capistrano::Configuration.instance(true).load do
   # project-specific "writable_children" configuration option should be used for
   # any special cases where additional folders need to be writable inside
   # specific Rails applications.
-  set :rails_writable_children, %w(log tmp public)
+  set :rails_writable_children, %w(log tmp tmp/cache public)
 
   # Set the default Rails environment.
   set :rails_env, "development"
@@ -112,19 +112,34 @@ Capistrano::Configuration.instance(true).load do
       end
 
       task :finalize_permissions, :except => { :no_release => true } do
-        all_rails_applications.each do |application_path, public_path|
-          # Files and folders that need to be writable by the web server
-          # (www-data user) will need to be writable by everyone.
-          begin
-            # Try changing the permissions in both the release directory and the
-            # shared directory, since chmod won't recursively follow symlinks.
-            dirs = rails_writable_children.collect { |d| File.join(latest_release, application_path, d) } + 
-              rails_writable_children.collect { |d| File.join(shared_path, application_path, d) }
+        release_dirs = []
+        dirs = []
 
-            if(dirs.any?)
-              run "chmod -Rf o+w #{dirs.join(" ")}"
-            end
+        # Files and folders that need to be writable by the web server
+        # (www-data user) will need to be writable by everyone.
+        all_rails_applications.each do |application_path, public_path|
+          app_release_dirs = rails_writable_children.collect { |d| File.join(latest_release, application_path, d) }
+
+          release_dirs  += app_release_dirs
+
+          dirs += app_release_dirs
+          dirs += rails_writable_children.collect { |d| File.join(shared_path, application_path, d) }
+        end
+
+        if(dirs.any?)
+          begin
+            # Make sure the folders exist inside the release so that changing
+            # the permissions will actually have an effect. We'll assume any
+            # folders that are shared have already been created.
+            #
+            # Try changing the permissions in both the release directory and
+            # the shared directory, since chmod won't recursively follow
+            # symlinks.
+            run "mkdir -p #{release_dirs.join(" ")} && chmod -Rf o+w #{dirs.join(" ")}"
           rescue Capistrano::CommandError
+            # Fail silently. "chmod -Rf" returns an error code if it involved
+            # any non-existant directories, but we don't actually care about
+            # non-existant directories.
           end
         end
       end

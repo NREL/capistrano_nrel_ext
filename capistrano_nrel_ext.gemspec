@@ -19,6 +19,8 @@ Gem::Specification.new do |s|
   s.add_dependency("erubis", [">= 2.6.0"])
   s.add_dependency("tzinfo", [">= 0.3.0"])
 
+  s.add_development_dependency("rake")
+
   s.files         = Dir.glob("lib/**/*")
   s.require_paths = ["lib"]
 end
