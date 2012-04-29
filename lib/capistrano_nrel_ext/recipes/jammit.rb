@@ -51,21 +51,21 @@ Capistrano::Configuration.instance(true).load do
             env = "RAILS_ENV=#{rails_env}"
           end
 
-          # If this project has javascript to compile first, run those tasks.
-          if(remote_rake_task_exists?(full_application_path, "js:compile"))
-            run "cd #{full_application_path}; #{env} #{rake} js:compile"
-          end
-
-          # If this project uses Compass stylesheets, compile those first.
-          compass_config_path = File.join(full_application_path, "config", "compass.rb")
-          if remote_file_exists?(compass_config_path)
-            run "cd #{full_application_path} && " +
-              "#{env} #{bundle_exec} compass compile"
-          end
-
           # Compress things with Jammit.
           config_path = File.join(full_application_path, "config", "assets.yml")
           if remote_file_exists?(config_path)
+            # If this project has javascript to compile first, run those tasks.
+            if(remote_rake_task_exists?(full_application_path, "js:compile"))
+              run "cd #{full_application_path}; #{env} #{rake} js:compile"
+            end
+
+            # If this project uses Compass stylesheets, compile those first.
+            compass_config_path = File.join(full_application_path, "config", "compass.rb")
+            if remote_file_exists?(compass_config_path)
+              run "cd #{full_application_path} && " +
+                "#{env} #{bundle_exec} compass compile"
+            end
+
             get_package_path_script = 'require "rubygems"; require "bundler/setup"; require "jammit"; Jammit.load_configuration("config/assets.yml"); puts Jammit.package_path;'
             package_path = capture("cd #{full_application_path} && ruby -e '#{get_package_path_script}' -W0").strip
 
