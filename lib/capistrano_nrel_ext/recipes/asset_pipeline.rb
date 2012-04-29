@@ -30,7 +30,12 @@ Capistrano::Configuration.instance(true).load do
           full_application_path = File.join(latest_release, application_path)
 
           if(remote_rake_task_exists?(full_application_path, "assets:precompile"))
-            run "cd #{full_application_path} && #{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{asset_pipeline_env} assets:precompile"
+            relative_url_env = ""
+            if(!public_path.to_s.empty? && public_path != "/")
+              relative_url_env = "RAILS_RELATIVE_URL_ROOT=#{public_path.inspect}"
+            end
+
+            run "cd #{full_application_path} && #{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:precompile"
           end
         end
       end
