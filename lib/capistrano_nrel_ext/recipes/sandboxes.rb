@@ -8,14 +8,14 @@ Capistrano::Configuration.instance(true).load do
   # given, then a sandbox is created and is accessed by SANDBOX.cttsdev.nrel.gov
   set :sandbox_name, ENV["SANDBOX"].to_s.gsub(/[^A-Za-z0-9]/, "")
 
+  if ENV["BRANCH"]
+    # Checkout of the branches subdirectory.
+    set(:repository_subdirectory) { "branches/#{ENV["BRANCH"]}" }
+  end
+
   if(sandbox_name.empty?)
     set(:deploy_to_subdirectory) { "common/#{application}" }
   else
-    if ENV["BRANCH"]
-      # Checkout of the branches subdirectory.
-      set(:repository_subdirectory) { "branches/#{ENV["BRANCH"]}" }
-    end
-
     # Deploy to a branches subdirectory.
     set(:deploy_to_subdirectory) { "sandboxes/#{sandbox_name}/#{application}" }
 

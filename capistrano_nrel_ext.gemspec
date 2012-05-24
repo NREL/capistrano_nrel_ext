@@ -14,7 +14,10 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "capistrano_nrel_ext"
 
-  s.add_dependency("capistrano", [">= 2.5"])
+  # Lock to 2.9, since later versions broke the ability to deal with nested
+  # shared_children:
+  # https://github.com/capistrano/capistrano/commit/44e96a4a8b69bd7b8ecf8ad384f12a46a7f3e0df
+  s.add_dependency("capistrano", ["~> 2.9.0"])
   s.add_dependency("chronic", [">= 0.6.0"])
   s.add_dependency("erubis", [">= 2.6.0"])
   s.add_dependency("tzinfo", [">= 0.3.0"])

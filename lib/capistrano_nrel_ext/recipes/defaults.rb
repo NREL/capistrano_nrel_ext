@@ -56,4 +56,17 @@ Capistrano::Configuration.instance(true).load do
 
   # Set any absolute paths that need to be writable by the web user.
   set :writable_paths, []
+
+  namespace :deploy do
+    task :update_code, :except => { :no_release => true } do
+      # Don't delete the checkout on rollback when there's only a single
+      # checkout.
+      if(deploy_via != :cached_checkout)
+        on_rollback { run "rm -rf #{release_path}; true" }
+      end
+
+      strategy.deploy!
+      finalize_update
+    end
+  end
 end

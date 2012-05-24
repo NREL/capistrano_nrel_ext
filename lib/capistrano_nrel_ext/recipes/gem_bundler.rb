@@ -24,6 +24,14 @@ Capistrano::Configuration.instance(true).load do
     end
   end
 
+  set(:shared_children) do
+    # We'll be installing bundle into each applications vendor/bundle
+    # directory. To make deployments speedy, we want that vendor/bundle
+    # directory to be a shared child across deployments.
+    bundle_dirs = gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
+    shared_children + bundle_dirs
+  end
+
   set :bundle_exec, lambda { "#{bundle_cmd} exec" }
 
   #
@@ -49,12 +57,6 @@ Capistrano::Configuration.instance(true).load do
           rails_apps = all_rails_applications.collect { |application_path, public_path| application_path }
           set(:gem_bundler_apps, gem_bundler_apps + rails_apps)
         end
-
-        # We'll be installing bundle into each applications vendor/bundle
-        # directory. To make deployments speedy, we want that vendor/bundle
-        # directory to be a shared child across deployments.
-        bundle_dirs = gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
-        set(:shared_children, shared_children + bundle_dirs)
       end
 
       send :desc, <<-DESC
