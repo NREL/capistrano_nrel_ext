@@ -26,13 +26,13 @@ Capistrano::Configuration.instance(true).load do
           set :asset_pipeline_env, "RAILS_GROUPS=assets"
       DESC
       task :precompile, :roles => :web, :except => { :no_release => true } do
-        all_rails_applications.each do |application_path, public_path|
-          full_application_path = File.join(latest_release, application_path)
+        rails_apps.each do |app|
+          full_application_path = File.join(latest_release, app[:path])
 
-          if(remote_rake_task_exists?(full_application_path, "assets:precompile"))
+          if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
             relative_url_env = ""
-            if(!public_path.to_s.empty? && public_path != "/")
-              relative_url_env = "RAILS_RELATIVE_URL_ROOT=#{public_path.inspect}"
+            if(!app[:base_uri].to_s.empty? && app[:base_uri] != "/")
+              relative_url_env = "RAILS_RELATIVE_URL_ROOT=#{app[:base_uri].inspect}"
             end
 
             run "cd #{full_application_path} && #{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:precompile"
@@ -52,10 +52,10 @@ Capistrano::Configuration.instance(true).load do
           set :asset_pipeline_env, "RAILS_GROUPS=assets"
       DESC
       task :clean, :roles => :web, :except => { :no_release => true } do
-        all_rails_applications.each do |application_path, public_path|
-          full_application_path = File.join(latest_release, application_path)
+        rails_apps.each do |app|
+          full_application_path = File.join(latest_release, app[:path])
 
-          if(remote_rake_task_exists?(full_application_path, "assets:clean"))
+          if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
             run "cd #{full_application_path} && #{rake} RAILS_ENV=#{rails_env} #{asset_pipeline_env} assets:clean"
           end
         end

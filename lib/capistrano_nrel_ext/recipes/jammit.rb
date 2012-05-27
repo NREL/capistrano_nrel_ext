@@ -6,10 +6,19 @@ Capistrano::Configuration.instance(true).load do
   #
   set :jammit_apps, []
 
+  set(:all_jammit_apps) do
+    all_apps = jammit_apps
+
+    if(exists?(:rails_apps))
+      all_apps += rails_apps.collect { |app| app[:path] }
+    end
+
+    all_apps
+  end
+
   #
   # Hooks 
   #
-  before "deploy:setup", "deploy:jammit:setup"
   after "deploy:update_code", "deploy:jammit:precache"
 
   #
@@ -17,21 +26,11 @@ Capistrano::Configuration.instance(true).load do
   #
   namespace :deploy do
     namespace :jammit do
-      task :setup, :except => { :no_release => true } do
-        # By default, look inside our root application, as well as any Rails
-        # applications that might have their own Jammit configuration.
-        jammit_apps = ["."]
-        if(exists?(:all_rails_applications))
-          rails_apps = all_rails_applications.collect { |application_path, public_path| application_path }
-          set(:jammit_apps, jammit_apps + rails_apps)
-        end
-      end
-
       desc <<-DESC
         Precache and compress asset files using Jammit.
       DESC
       task :precache, :except => { :no_release => true } do
-        jammit_apps.each do |application_path|
+        all_jammit_apps.each do |application_path|
           full_application_path = File.join(latest_release, application_path)
 
           # Optionally execute everything through gem bundler. This is the
@@ -55,7 +54,8 @@ Capistrano::Configuration.instance(true).load do
           config_path = File.join(full_application_path, "config", "assets.yml")
           if remote_file_exists?(config_path)
             # If this project has javascript to compile first, run those tasks.
-            if(remote_rake_task_exists?(full_application_path, "js:compile"))
+            custom_js_compile_path = File.join(full_application_path, "lib", "tasks", "js_compile.rake")
+            if remote_file_exists?(custom_js_compile_path)
               run "cd #{full_application_path}; #{env} #{rake} js:compile"
             end
 

@@ -4,6 +4,16 @@ Capistrano::Configuration.instance(true).load do
   #
   set :gem_bundler_apps, []
 
+  set(:all_gem_bundler_apps) do
+    all_apps = gem_bundler_apps
+
+    if(exists?(:rails_apps))
+      all_apps += rails_apps.collect { |app| app[:path] }
+    end
+
+    all_apps
+  end
+
   _cset :bundle_gemfile, "Gemfile"
   _cset :bundle_dir, "vendor/bundle"
   _cset :bundle_cmd, "bundle"
@@ -37,7 +47,6 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
-  before "deploy:setup", "deploy:gem_bundler:setup"
   after "deploy:update_code", "deploy:gem_bundler:install"
 
   #
@@ -51,14 +60,6 @@ Capistrano::Configuration.instance(true).load do
   #
   namespace :deploy do
     namespace :gem_bundler do
-      task :setup, :except => { :no_release => true } do
-        # Also add all the paths to Rails apps that might use Bundler.
-        if(exists?(:all_rails_applications))
-          rails_apps = all_rails_applications.collect { |application_path, public_path| application_path }
-          set(:gem_bundler_apps, gem_bundler_apps + rails_apps)
-        end
-      end
-
       send :desc, <<-DESC
         Install the current Bundler environment. This is based on Bundler's \
         own capistrano task, but customized to handle our multiple \
@@ -80,7 +81,7 @@ Capistrano::Configuration.instance(true).load do
       DESC
       task :install, :except => { :no_release => true } do
         # Gather all the paths for bundler applications.
-        gem_bundler_paths = gem_bundler_apps.collect do |application_path|
+        gem_bundler_paths = all_gem_bundler_apps.collect do |application_path|
           File.join(latest_release, application_path)
         end
 
