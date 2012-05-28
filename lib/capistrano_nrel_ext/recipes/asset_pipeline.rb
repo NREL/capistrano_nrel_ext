@@ -7,7 +7,7 @@ Capistrano::Configuration.instance(true).load do
   # Varabiles
   #
   _cset :asset_pipeline_env, "RAILS_GROUPS=assets"
-  _cset :asset_pipline_role, [:web]
+  _cset :asset_pipeline_role, [:web]
 
   #
   # Hooks 
