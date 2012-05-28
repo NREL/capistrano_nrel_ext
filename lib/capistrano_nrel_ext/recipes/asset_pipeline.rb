@@ -7,6 +7,7 @@ Capistrano::Configuration.instance(true).load do
   # Varabiles
   #
   _cset :asset_pipeline_env, "RAILS_GROUPS=assets"
+  _cset :asset_pipline_role, [:web]
 
   #
   # Hooks 
@@ -25,17 +26,19 @@ Capistrano::Configuration.instance(true).load do
           set :rails_env, "production"
           set :asset_pipeline_env, "RAILS_GROUPS=assets"
       DESC
-      task :precompile, :roles => :web, :except => { :no_release => true } do
-        rails_apps.each do |app|
-          full_application_path = File.join(latest_release, app[:path])
+      task :precompile, :roles => asset_pipeline_role, :except => { :no_release => true } do
+        if(rails_env != "development")
+          rails_apps.each do |app|
+            full_application_path = File.join(latest_release, app[:path])
 
-          if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
-            relative_url_env = ""
-            if(!app[:base_uri].to_s.empty? && app[:base_uri] != "/")
-              relative_url_env = "RAILS_RELATIVE_URL_ROOT=#{app[:base_uri].inspect}"
+            if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
+              relative_url_env = ""
+              if(!app[:base_uri].to_s.empty? && app[:base_uri] != "/")
+                relative_url_env = "RAILS_RELATIVE_URL_ROOT=#{app[:base_uri].inspect}"
+              end
+
+              run "cd #{full_application_path} && #{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:precompile"
             end
-
-            run "cd #{full_application_path} && #{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:precompile"
           end
         end
       end
@@ -51,7 +54,7 @@ Capistrano::Configuration.instance(true).load do
           set :rails_env, "production"
           set :asset_pipeline_env, "RAILS_GROUPS=assets"
       DESC
-      task :clean, :roles => :web, :except => { :no_release => true } do
+      task :clean, :roles => asset_pipeline_role, :except => { :no_release => true } do
         rails_apps.each do |app|
           full_application_path = File.join(latest_release, app[:path])
 
