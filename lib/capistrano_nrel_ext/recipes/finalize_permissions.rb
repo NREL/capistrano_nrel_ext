@@ -2,7 +2,7 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
-  before "deploy:symlink", "deploy:finalize_permissions"
+  before "deploy:create_symlink", "deploy:finalize_permissions"
 
   #
   # Tasks
