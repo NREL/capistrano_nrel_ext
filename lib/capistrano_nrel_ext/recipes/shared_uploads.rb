@@ -40,18 +40,20 @@ Capistrano::Configuration.instance(true).load do
           public_install_path = File.join(latest_release, public_dir)
           shared_upload_destination_path = File.join(shared_uploads_path, "public", stage.to_s, shared_upload_dir)
 
-          # Install the proper symbolic links if they haven't already been
-          # setup.
-          run <<-CMD
-            if [ "`readlink #{public_install_path}`" != "#{shared_upload_destination_path}" ]; then \
-              mkdir -p #{shared_upload_destination_path} && \
-              rm -rf #{public_install_path} && \
-              ln -s #{shared_upload_destination_path} #{public_install_path}; \
-            fi
-          CMD
-
-          # Ensure that the upload folder is writable by the web server.
-          writable_paths << shared_upload_destination_path
+          if(exists?(:disable_internal_symlinks) && disable_internal_symlinks)
+            run "mkdir -p #{public_install_path} && chmod -R 777 #{public_install_path}"
+          else
+            # Install the proper symbolic links if they haven't already been
+            # setup.
+            run <<-CMD
+              if [ "`readlink #{public_install_path}`" != "#{shared_upload_destination_path}" ]; then \
+                mkdir -p #{shared_upload_destination_path} && \
+                chmod -R 777 #{shared_upload_destination_path} && \
+                rm -rf #{public_install_path} && \
+                ln -s #{shared_upload_destination_path} #{public_install_path}; \
+              fi
+            CMD
+          end
         end
       end
     end

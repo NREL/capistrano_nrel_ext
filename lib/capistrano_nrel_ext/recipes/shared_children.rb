@@ -31,6 +31,9 @@ Capistrano::Configuration.instance(true).load do
     namespace :shared_children_tasks do
       task :setup, :except => { :no_release => true } do
         shared_dirs = all_shared_children_dirs.map { |shared_dir| File.join(shared_path, shared_dir) }
+        if(exists?(:disable_internal_symlinks) && disable_internal_symlinks)
+          shared_dirs = all_shared_children_dirs.map { |shared_dir| File.join(latest_release, shared_dir) }
+        end
 
         if shared_dirs.any?
           run "#{try_sudo} mkdir -p #{shared_dirs.join(' ')}"
@@ -45,9 +48,11 @@ Capistrano::Configuration.instance(true).load do
           shared_dir_path = File.join(shared_path, shared_dir)
           release_dir_path = File.join(latest_release, shared_dir)
 
-          commands << "rm -rf #{release_dir_path}"
-          commands << "mkdir -p #{File.dirname(release_dir_path)}"
-          commands << "ln -s #{shared_dir_path} #{release_dir_path}"
+          if(!exists?(:disable_internal_symlinks) || !disable_internal_symlinks)
+            commands << "rm -rf #{release_dir_path}"
+            commands << "mkdir -p #{File.dirname(release_dir_path)}"
+            commands << "ln -s #{shared_dir_path} #{release_dir_path}"
+          end
         end
 
         if commands.any?
