@@ -1,4 +1,5 @@
 require "capistrano_nrel_ext/actions/remote_tests"
+require "capistrano_nrel_ext/recipes/shared_children"
 
 Capistrano::Configuration.instance(true).load do
   #
@@ -36,6 +37,18 @@ Capistrano::Configuration.instance(true).load do
   # Rails application.
   set :rails_shared_children, %w(log tmp/pids vendor/bundle public/javascripts/compiled)
 
+  set(:rails_shared_children_dirs) do
+    dirs = []
+
+    rails_apps.each do |app|
+      rails_shared_children.each do |shared_dir|
+        dirs << File.join(app[:path], shared_dir)
+      end
+    end
+
+    dirs
+  end
+
   # Set any folders or files that need to be writable by the Apache user inside
   # every Rails application. Since this applies to every Rails application, the
   # project-specific "writable_children" configuration option should be used for
@@ -49,8 +62,6 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
-  after "deploy:setup", "deploy:rails:setup"
-  after "deploy:finalize_update", "deploy:rails:finalize_update"
   after "deploy:update_code", "deploy:rails:finalize_permissions"
 
   #
@@ -80,39 +91,6 @@ Capistrano::Configuration.instance(true).load do
     end
 
     namespace :rails do
-      task :setup, :except => { :no_release => true } do
-        dirs = []
-        rails_apps.each do |app|
-          rails_shared_children.each do |shared_dir|
-            dirs << File.join(shared_path, app[:path], shared_dir)
-          end
-        end
-
-        if(dirs.any?)
-          run "#{try_sudo} mkdir -p #{dirs.join(' ')} && #{try_sudo} chmod g+w #{dirs.join(' ')}"
-        end
-      end
-
-      task :finalize_update, :except => { :no_release => true } do
-        commands = []
-
-        rails_apps.each do |app|
-          rails_shared_children.each do |shared_dir|
-            shared_dir_path = File.join(shared_path, app[:path], shared_dir)
-            release_dir_path = File.join(latest_release, app[:path], shared_dir)
-
-            commands << "mkdir -p #{shared_dir_path}"
-            commands << "rm -rf #{release_dir_path}"
-            commands << "mkdir -p #{File.dirname(release_dir_path)}"
-            commands << "ln -s #{shared_dir_path} #{release_dir_path}"
-          end
-        end
-
-        if(commands.any?)
-          run commands.join(" && ")
-        end
-      end
-
       task :finalize_permissions, :except => { :no_release => true } do
         release_dirs = []
         dirs = []

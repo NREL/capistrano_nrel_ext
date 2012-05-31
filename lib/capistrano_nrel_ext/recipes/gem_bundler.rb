@@ -1,3 +1,5 @@
+require "capistrano_nrel_ext/recipes/shared_children"
+
 Capistrano::Configuration.instance(true).load do
   #
   # Varabiles
@@ -34,12 +36,11 @@ Capistrano::Configuration.instance(true).load do
     end
   end
 
-  set(:shared_children) do
+  set(:gem_bundler_shared_children_dirs) do
     # We'll be installing bundle into each applications vendor/bundle
     # directory. To make deployments speedy, we want that vendor/bundle
     # directory to be a shared child across deployments.
-    bundle_dirs = gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
-    shared_children + bundle_dirs
+    all_gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
   end
 
   set :bundle_exec, lambda { "#{bundle_cmd} exec" }

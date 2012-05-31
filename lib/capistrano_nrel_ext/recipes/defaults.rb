@@ -47,8 +47,13 @@ Capistrano::Configuration.instance(true).load do
   set :subdomain, ""
   set(:domain) { "#{subdomain}#{base_domain}" }
 
+  # Don't use Capistrano's default `shared_children` since its somewhat broken
+  # for handling nested folders in newer versions:
+  # https://github.com/capistrano/capistrano/commit/44e96a4a8b69bd7b8ecf8ad384f12a46a7f3e0df
+  set :shared_children, []
+
   # Setup any shared folders that should be kept between deployments.
-  set :shared_children, %w(log)
+  set :shared_children_dirs, %w(log)
 
   # Set any folders or files that need to be writable by the web user. Children
   # paths are given relative to the release's root.
