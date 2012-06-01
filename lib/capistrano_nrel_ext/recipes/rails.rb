@@ -35,7 +35,7 @@ Capistrano::Configuration.instance(true).load do
 
   # Setup any shared folders that should be kept between deployments inside a
   # Rails application.
-  set :rails_shared_children, %w(log tmp/pids vendor/bundle public/javascripts/compiled)
+  set :rails_shared_children, %w(log tmp/pids vendor/bundle)
 
   set(:rails_shared_children_dirs) do
     dirs = []
