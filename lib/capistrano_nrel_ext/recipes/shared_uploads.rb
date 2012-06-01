@@ -48,7 +48,7 @@ Capistrano::Configuration.instance(true).load do
             run <<-CMD
               if [ "`readlink #{public_install_path}`" != "#{shared_upload_destination_path}" ]; then \
                 mkdir -p #{shared_upload_destination_path} && \
-                chmod -R 777 #{shared_upload_destination_path} && \
+                chmod -Rf 777 #{shared_upload_destination_path}; \
                 rm -rf #{public_install_path} && \
                 ln -s #{shared_upload_destination_path} #{public_install_path}; \
               fi

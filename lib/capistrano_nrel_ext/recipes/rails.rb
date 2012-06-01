@@ -51,18 +51,25 @@ Capistrano::Configuration.instance(true).load do
 
   # Set any folders or files that need to be writable by the Apache user inside
   # every Rails application. Since this applies to every Rails application, the
-  # project-specific "writable_children" configuration option should be used for
-  # any special cases where additional folders need to be writable inside
-  # specific Rails applications.
+  # project-specific "writable_children_dirs" configuration option should be
+  # used for any special cases where additional folders need to be writable
+  # inside specific Rails applications.
   set :rails_writable_children, %w(log tmp tmp/cache public)
+
+  set(:rails_writable_children_dirs) do
+    dirs = []
+
+    rails_apps.each do |app|
+      rails_writable_children.each do |writable_dir|
+        dirs << File.join(app[:path], writable_dir)
+      end
+    end
+
+    dirs
+  end
 
   # Set the default Rails environment.
   set :rails_env, "development"
-
-  #
-  # Hooks
-  #
-  after "deploy:update_code", "deploy:rails:finalize_permissions"
 
   #
   # Tasks
@@ -87,41 +94,6 @@ Capistrano::Configuration.instance(true).load do
         env = "RAILS_ENV=#{rails_env}_migrations"
 
         run "cd #{app_directory}; #{env} #{rake} db:schema:load"
-      end
-    end
-
-    namespace :rails do
-      task :finalize_permissions, :except => { :no_release => true } do
-        release_dirs = []
-        dirs = []
-
-        # Files and folders that need to be writable by the web server
-        # (www-data user) will need to be writable by everyone.
-        rails_apps.each do |app|
-          app_release_dirs = rails_writable_children.collect { |d| File.join(latest_release, app[:path], d) }
-
-          release_dirs  += app_release_dirs
-
-          dirs += app_release_dirs
-          dirs += rails_writable_children.collect { |d| File.join(shared_path, app[:path], d) }
-        end
-
-        if(dirs.any?)
-          begin
-            # Make sure the folders exist inside the release so that changing
-            # the permissions will actually have an effect. We'll assume any
-            # folders that are shared have already been created.
-            #
-            # Try changing the permissions in both the release directory and
-            # the shared directory, since chmod won't recursively follow
-            # symlinks.
-            run "mkdir -p #{release_dirs.join(" ")} && chmod -Rf o+w #{dirs.join(" ")}"
-          rescue Capistrano::CommandError
-            # Fail silently. "chmod -Rf" returns an error code if it involved
-            # any non-existant directories, but we don't actually care about
-            # non-existant directories.
-          end
-        end
       end
     end
   end

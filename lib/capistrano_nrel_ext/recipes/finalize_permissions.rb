@@ -1,5 +1,20 @@
 Capistrano::Configuration.instance(true).load do
   #
+  # Varabiles
+  #
+  set :writable_children_dirs, []
+
+  set(:all_writable_children_dirs) do
+    all_paths = writable_children_dirs
+
+    if(exists?(:rails_writable_children_dirs))
+      all_paths += rails_writable_children_dirs
+    end
+
+    all_paths
+  end
+
+  #
   # Hooks
   #
   before "deploy:create_symlink", "deploy:finalize_permissions"
@@ -22,7 +37,7 @@ Capistrano::Configuration.instance(true).load do
         end
 
         begin
-          # Make all of the shared files group writable. 
+          # Make all of the shared files group writable.
           run "chmod -Rf g+w #{shared_path}"
         rescue Capistrano::CommandError
         end
@@ -30,17 +45,21 @@ Capistrano::Configuration.instance(true).load do
 
       # Files and folders that need to be writable by the web server
       # (www-data user) will need to be writable by everyone.
-      begin
-        # Try changing the permissions in both the release directory and the
-        # shared directory, since chmod won't recursively follow symlinks.
-        dirs = writable_children.collect { |d| File.join(latest_release, d) } + 
-          writable_children.collect { |d| File.join(shared_path, d) } +
-          writable_paths
+      #
+      # Try changing the permissions in both the release directory and the
+      # shared directory, since chmod won't recursively follow symlinks.
+      dirs = all_writable_children_dirs.collect { |d| File.join(latest_release, d) } +
+        all_writable_children_dirs.collect { |d| File.join(shared_path, d) } +
+        writable_paths
 
-        if(dirs.any?)
+      if(dirs.any?)
+        begin
           run "chmod -Rf o+w #{dirs.join(" ")}"
+        rescue Capistrano::CommandError
+          # Fail silently. We'll assume if permission changing failed, either
+          # the folder doesn't exist (we don't care), or the contents are
+          # already owned by the proper user (web user).
         end
-      rescue Capistrano::CommandError
       end
     end
   end

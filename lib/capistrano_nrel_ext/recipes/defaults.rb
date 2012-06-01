@@ -57,7 +57,7 @@ Capistrano::Configuration.instance(true).load do
 
   # Set any folders or files that need to be writable by the web user. Children
   # paths are given relative to the release's root.
-  set :writable_children, %w(log)
+  set :writable_children_dirs, %w(log)
 
   # Set any absolute paths that need to be writable by the web user.
   set :writable_paths, []
