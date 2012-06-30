@@ -21,11 +21,11 @@ Capistrano::Configuration.instance(true).load do
       files += capture("cd #{latest_release} && find config -type f").to_s.split
       files.sort!
 
-      local_checksum = run_locally("shasum -a 256 #{files.join(" ")}").strip
-      remote_checksum = capture("cd #{latest_release} && shasum -a 256 #{files.join(" ")}").strip
+      local_checksum = run_locally("shasum -a 256 #{files.join(" ")}").strip.gsub(/[\r\n]+/, "\n")
+      remote_checksum = capture("cd #{latest_release} && shasum -a 256 #{files.join(" ")}").strip.gsub(/[\r\n]+/, "\n")
 
       if(local_checksum != remote_checksum)
-        diff = Diffy::Diff.new(local_checksum, remote_checksum, :diff => ["-U 0", "-w"])
+        diff = Diffy::Diff.new(local_checksum, remote_checksum, :diff => ["-U 0"])
         raise Capistrano::Error, <<-eos
 
 ##### ERROR: MISMATCHED DEPLOYMENT RESOURCES #####
