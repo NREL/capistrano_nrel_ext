@@ -2,6 +2,8 @@
 # servers. These recipes should not require additional dependencies on the
 # destination server.
 require "capistrano_nrel_ext/recipes/clean_slate"
+require "capistrano_nrel_ext/recipes/confirm_updated"
+require "capistrano_nrel_ext/recipes/locked"
 require "capistrano_nrel_ext/recipes/cleanup"
 require "capistrano_nrel_ext/recipes/deployed_config"
 require "capistrano_nrel_ext/recipes/finalize_permissions"
@@ -67,7 +69,7 @@ Capistrano::Configuration.instance(true).load do
       # Don't delete the checkout on rollback when there's only a single
       # checkout.
       if(deploy_via != :cached_checkout)
-        on_rollback { run "rm -rf #{release_path}; true" }
+        on_rollback { run "rm -f #{lock_file}; rm -rf #{release_path}; true" }
       end
 
       strategy.deploy!

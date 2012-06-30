@@ -1,0 +1,45 @@
+Capistrano::Configuration.instance(true).load do
+  #
+  # Variables
+  #
+  _cset(:lock_file) { File.join(shared_path, "DEPLOY_LOCKED") }
+
+  #
+  # Hooks
+  #
+  before "deploy", "deploy:lock"
+  before "deploy:cold", "deploy:lock"
+  after "deploy", "deploy:unlock"
+  after "deploy:cold", "deploy:unlock"
+
+  #
+  # Tasks
+  #
+  namespace :deploy do
+    task :lock, :except => { :no_release => true } do
+      run "#{try_sudo} mkdir -p #{File.dirname(lock_file)}"
+
+      if(remote_file_exists?(lock_file))
+        raise Capistrano::Error, <<-eos
+
+##### ERROR: DEPLOYMENT LOCKED #####
+
+Another deployment is already in progress. Please wait until that deployment
+finishes.
+
+    Note: If you believe this is an error, first make sure all capistrano
+    processes are in fact killed (both locally and remotely). Then you may run:
+
+    cap ENVIRONMENT deploy:unlock
+        eos
+      else
+        put("true", lock_file)
+      end
+    end
+
+    task :unlock, :except => { :no_release => true } do
+      run "#{try_sudo} rm -f #{lock_file}"
+    end
+  end
+end
+

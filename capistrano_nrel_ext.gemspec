@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   # https://github.com/net-ssh/net-ssh/issues/45
   s.add_dependency("net-ssh", ["~> 2.4.0"])
 
+  s.add_dependency("diffy")
   s.add_dependency("chronic", [">= 0.6.0"])
   s.add_dependency("erubis", [">= 2.6.0"])
   s.add_dependency("tzinfo", [">= 0.3.0"])
