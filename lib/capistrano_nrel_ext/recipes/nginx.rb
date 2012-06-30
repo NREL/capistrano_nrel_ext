@@ -30,7 +30,7 @@ Capistrano::Configuration.instance(true).load do
       files have been deployed.
     DESC
     task :reload, :roles => :app, :except => { :no_release => true } do
-      sudo "#{nginx_init_script} reload"
+      sudo "#{nginx_init_script} configtest && #{nginx_init_script} reload"
     end
   end
 
