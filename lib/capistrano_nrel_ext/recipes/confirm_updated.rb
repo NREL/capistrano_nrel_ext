@@ -19,6 +19,7 @@ Capistrano::Configuration.instance(true).load do
     task :confirm_updated, :except => { :no_release => true } do
       files = ["Gemfile", "Gemfile.lock"]
       files += capture("cd #{latest_release} && find config -type f").to_s.split
+      files.reject! { |file| file =~ %r{.svn(/|$)} }
       files.sort!
 
       local_checksum = run_locally("shasum -a 256 #{files.join(" ")}").strip.gsub(/[\r\n]+/, "\n")

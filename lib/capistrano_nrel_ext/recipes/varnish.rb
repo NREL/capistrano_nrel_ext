@@ -18,7 +18,8 @@ Capistrano::Configuration.instance(true).load do
       deployments.
     DESC
     task :ban, :roles => :app, :except => { :no_release => true } do
-      sudo %(#{varnish_ban_script} 'req.http.host == "#{domain}"')
+      commands = all_domains.collect { |d| %(sudo #{varnish_ban_script} 'req.http.host == "#{d}"') }
+      run commands.join(" && ")
     end
   end
 end

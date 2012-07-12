@@ -52,6 +52,8 @@ Capistrano::Configuration.instance(true).load do
   set :base_domain_aliases, []
   set(:domain_aliases) { base_domain_aliases.collect { |base_alias| "#{subdomain}#{base_alias}" } }
 
+  set(:all_domains) { [domain] + domain_aliases }
+
   # Don't use Capistrano's default `shared_children` since its somewhat broken
   # for handling nested folders in newer versions:
   # https://github.com/capistrano/capistrano/commit/44e96a4a8b69bd7b8ecf8ad384f12a46a7f3e0df
