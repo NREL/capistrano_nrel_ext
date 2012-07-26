@@ -5,7 +5,7 @@ Capistrano::Configuration.instance(true).load do
   _cset :varnish_ban_script, "/usr/local/bin/varnish_ban"
 
   #
-  # Hooks 
+  # Hooks
   #
   after "deploy:restart", "varnish:ban"
 

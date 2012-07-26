@@ -89,6 +89,11 @@ Capistrano::Configuration.instance(true).load do
           parse_sample_files(["config/templates/maintenance.html"])
           run "mv #{File.join(latest_release, "config", "templates", "maintenance.html")} #{File.join(shared_path, "public", "system", "maintenance.html")}"
           run "touch #{File.join(shared_path, "public", "system", "maintenance_#{maintenance_type}")}"
+
+          # If Varnish is being used, clear its cache.
+          if(exists?(:varnish_ban_script))
+            varnish.ban
+          end
         end
       end
 
@@ -100,6 +105,11 @@ Capistrano::Configuration.instance(true).load do
       DESC
       task :enable, :roles => :web, :except => { :no_release => true } do
         run "rm -f #{shared_path}/public/system/maintenance.html && rm -f #{shared_path}/public/system/maintenance_#{maintenance_type}"
+
+        # If Varnish is being used, clear its cache.
+        if(exists?(:varnish_ban_script))
+          varnish.ban
+        end
       end
 
       desc <<-DESC
