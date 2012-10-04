@@ -90,14 +90,12 @@ Capistrano::Configuration.instance(true).load do
           gemfile_path = File.join(full_application_path, bundle_gemfile)
 
           if(remote_file_exists?(gemfile_path))
-            bundle_path = File.join(full_application_path, bundle_dir)
-
             args = ["--gemfile #{gemfile_path}"]
-            args << "--path #{bundle_path}" unless bundle_path.to_s.empty?
+            args << "--path #{bundle_dir}" unless bundle_dir.to_s.empty?
             args << bundle_flags.to_s
             args << "--without #{bundle_without.compact.join(" ")}" unless bundle_without.empty?
 
-            run "#{bundle_cmd} install #{args.join(' ')}"
+            run "cd #{full_application_path} && #{bundle_cmd} install #{args.join(' ')}"
           end
         end
       end

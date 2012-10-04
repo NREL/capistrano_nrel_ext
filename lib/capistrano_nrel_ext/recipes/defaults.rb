@@ -73,12 +73,28 @@ Capistrano::Configuration.instance(true).load do
     task :update_code, :except => { :no_release => true } do
       # Don't delete the checkout on rollback when there's only a single
       # checkout.
-      if(deploy_via != :cached_checkout)
+      if(![:cached_checkout, :no_op].include?(deploy_via))
         on_rollback { run "rm -f #{lock_file}; rm -rf #{release_path}; true" }
       end
 
       strategy.deploy!
       finalize_update
+    end
+
+    alias_task :original_cleanup, :cleanup
+
+    desc <<-DESC
+      Clean up old releases. By default, the last 5 releases are kept on each \
+      server (though you can change this with the keep_releases variable). All \
+      other deployed revisions are removed from the servers. By default, this \
+      will use sudo to clean up the old releases, but if sudo is not available \
+      for your environment, set the :use_sudo variable to false instead.
+    DESC
+    task :cleanup do
+      # Don't every perform a cleanup, when there's only a single checkout of the code.
+      if(![:cached_checkout, :no_op].include?(deploy_via))
+        original_cleanup
+      end
     end
   end
 end
