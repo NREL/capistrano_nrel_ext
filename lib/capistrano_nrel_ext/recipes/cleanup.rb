@@ -1,3 +1,5 @@
+require "artii"
+
 Capistrano::Configuration.instance(true).load do
   #
   # Hooks
@@ -40,7 +42,9 @@ Capistrano::Configuration.instance(true).load do
       logger.info("\n\nYour deployment to #{stage} has succeeded.\n\n\n")
 
       # A silly banner, because its fun.
-      print `figlet -f big "Deployment Success!!" 2> /dev/null`
+      banner = Artii::Base.new(:font => "big")
+      puts banner.asciify("Deployment")
+      puts banner.asciify("Success!!")
     end
   end
 end
