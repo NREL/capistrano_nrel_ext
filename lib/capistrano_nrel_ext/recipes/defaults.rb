@@ -30,7 +30,7 @@ Capistrano::Configuration.instance(true).load do
   # Our deploy path will be made up of our custom deploy_to_base and
   # deploy_to_subdirectory variables which can be set by other extensions or
   # stage configuration.
-  set(:deploy_to_base) { abort("Please specify the base path for your application, set :deploy_to_base, '/srv/afdc/cttsdev'") }
+  set(:deploy_to_base) { abort("Please specify the base path for your application, set :deploy_to_base, '/srv/sites'") }
   set(:deploy_to_subdirectory) { application } 
   set(:deploy_to) { File.join(deploy_to_base, deploy_to_subdirectory) }
 
