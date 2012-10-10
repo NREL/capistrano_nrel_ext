@@ -10,7 +10,7 @@ Capistrano::Configuration.instance(true).load do
   _cset :asset_pipeline_role, [:web]
 
   #
-  # Hooks 
+  # Hooks
   #
   after "deploy:update_code", "deploy:asset_pipeline:precompile"
 
