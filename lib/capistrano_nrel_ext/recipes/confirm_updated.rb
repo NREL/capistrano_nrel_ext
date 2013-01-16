@@ -19,7 +19,18 @@ Capistrano::Configuration.instance(true).load do
     task :confirm_updated, :except => { :no_release => true } do
       files = ["Gemfile", "Gemfile.lock"]
       files += capture("cd #{latest_release} && find config -type f").to_s.split
+
+      # Ignore subversion files.
       files.reject! { |file| file =~ %r{.svn(/|$)} }
+
+      # For the development environment, we might be deploying on top of an
+      # existing sandbox. So ignore any files that get generated dynamically as
+      # part of the deployment process.
+      template_files = files.select { |file| file =~ /\.erb$/ }
+      parsed_template_files = template_files.collect { |file| file.gsub(/\.erb$/, "") }
+      files -= parsed_template_files
+      files.reject! { |file| file =~ %r{config/deployed.yml$} }
+
       files.sort!
 
       local_checksum = run_locally("shasum -a 256 #{files.join(" ")}").strip.gsub(/[\r\n]+/, "\n")
