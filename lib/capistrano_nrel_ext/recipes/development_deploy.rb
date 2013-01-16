@@ -27,7 +27,7 @@ Capistrano::Configuration.instance(true).load do
   # Separate the releases from the other deployment content so the paths are
   # easier to navigate in development.
   set(:releases_path_base) { abort("Please specify the base path for your releases, set :releases_path_base, '/srv'") }
-  set(:releases_path) { File.join(releases_path_base, deploy_to_subdirectory) }
+  set(:releases_path) { File.join(releases_path_base, application) }
 
   # Don't bother with permissions, since we'll assume everything should be
   # owned by the deployment user.

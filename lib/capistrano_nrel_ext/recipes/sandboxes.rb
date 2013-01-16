@@ -14,10 +14,10 @@ Capistrano::Configuration.instance(true).load do
   end
 
   if(sandbox_name.empty?)
-    set(:deploy_to_subdirectory) { "common/#{application}" }
+    set(:deploy_to_subdirectory) { "#{application}/common" }
   else
     # Deploy to a branches subdirectory.
-    set(:deploy_to_subdirectory) { "sandboxes/#{sandbox_name}/#{application}" }
+    set(:deploy_to_subdirectory) { "#{application}/#{sandbox_name}" }
 
     # Use the sandbox name as a subdomain.
     set :subdomain, "#{sandbox_name}."
