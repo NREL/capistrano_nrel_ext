@@ -20,8 +20,8 @@ Capistrano::Configuration.instance(true).load do
       files = ["Gemfile", "Gemfile.lock"]
       files += capture("cd #{latest_release} && find config -type f").to_s.split
 
-      # Ignore subversion files.
-      files.reject! { |file| file =~ %r{.svn(/|$)} }
+      # Ignore SCM files.
+      files.reject! { |file| file =~ %r{.(svn|git)(/|$)} }
 
       # For the development environment, we might be deploying on top of an
       # existing sandbox. So ignore any files that get generated dynamically as
