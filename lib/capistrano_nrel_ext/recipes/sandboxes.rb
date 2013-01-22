@@ -9,7 +9,10 @@ Capistrano::Configuration.instance(true).load do
   set :sandbox_name, ENV["SANDBOX"].to_s.gsub(/[^A-Za-z0-9]/, "")
 
   if ENV["BRANCH"]
-    # Checkout of the branches subdirectory.
+    # Checkout the branch for git.
+    set(:branch) { ENV["BRANCH"] }
+
+    # Checkout the branch for subversion.
     set(:repository_subdirectory) { "branches/#{ENV["BRANCH"]}" }
   end
 

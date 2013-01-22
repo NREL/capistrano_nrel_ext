@@ -11,7 +11,10 @@ Capistrano::Configuration.instance(true).load do
   if(branch_name.empty?)
     set(:deploy_to_subdirectory) { "#{application}/common" }
   else
-    # Checkout of the branches subdirectory.
+    # Checkout the branch for git.
+    set(:branch) { ENV["BRANCH"] }
+
+    # Checkout the branch for subversion.
     set(:repository_subdirectory) { "branches/#{ENV["BRANCH"]}" }
 
     # Deploy to a branches subdirectory.
