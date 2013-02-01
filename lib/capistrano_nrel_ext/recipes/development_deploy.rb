@@ -1,6 +1,9 @@
 Capistrano::Configuration.instance(true).load do
-  # For development, don't maintain multiple releases.
-  set :deploy_via, :cached_checkout
+  # For development, don't try to maintain the checkout. Checkout a single copy
+  # on the first deployment (if it doesn't already exist), but don't ever
+  # attempt to update or switch it (we'll assume the user wants to manage it
+  # after the initial checkout).
+  set :deploy_via, :single_checkout_no_update
 
   # Only maintain a single release.
   set(:releases) { [release_name] }

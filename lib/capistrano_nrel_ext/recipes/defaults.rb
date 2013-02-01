@@ -73,7 +73,7 @@ Capistrano::Configuration.instance(true).load do
     task :update_code, :except => { :no_release => true } do
       # Don't delete the checkout on rollback when there's only a single
       # checkout.
-      if(![:cached_checkout, :no_op].include?(deploy_via))
+      if(![:single_checkout_no_update].include?(deploy_via))
         on_rollback { run "rm -f #{lock_file}; rm -rf #{release_path}; true" }
       end
 
@@ -91,8 +91,9 @@ Capistrano::Configuration.instance(true).load do
       for your environment, set the :use_sudo variable to false instead.
     DESC
     task :cleanup do
-      # Don't every perform a cleanup, when there's only a single checkout of the code.
-      if(![:cached_checkout, :no_op].include?(deploy_via))
+      # Don't every perform a cleanup, when there's only a single checkout of
+      # the code.
+      if(![:single_checkout_no_update].include?(deploy_via))
         original_cleanup
       end
     end

@@ -1,11 +1,6 @@
 require "capistrano_nrel_ext/recipes/development_deploy"
 
 Capistrano::Configuration.instance(true).load do
-  # Don't attempt to checkout the code, since we'll assume the code was checked
-  # out on the host computer and not via Vagrant (where the vagrant user might
-  # not have easy access to checkout the code).
-  set :deploy_via, :no_op
-
   # Separate the releases from the other deployment content so the paths are
   # easier to navigate in development. This is also necessary for Vagrant so
   # the release is on the shared drive, while the other deployment content is
