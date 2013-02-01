@@ -5,6 +5,14 @@ Capistrano::Configuration.instance(true).load do
   # after the initial checkout).
   set :deploy_via, :single_checkout_no_update
 
+  # For development, when using git, use our custom git_tracking scm so the
+  # initial checkouts for sandboxes use real branches.
+  if(exists?(:scm))
+    if(scm.to_s == "git")
+      set :scm, "git_tracking"
+    end
+  end
+
   # Only maintain a single release.
   set(:releases) { [release_name] }
 
