@@ -4,6 +4,8 @@ module Capistrano
   module Deploy
     module SCM
       class GitTracking < Git
+        default_command "git"
+
         # Modify the default git checkout process to checkout and track a
         # specific branch.
         #
@@ -12,9 +14,10 @@ module Capistrano
         # (so the specific revision can be checked out), but when deploying to
         # development sandboxes, we just want a normal checkout that tracks the
         # remote repo.
-        def checkout(*args)
-          execute = super(*args)
+        def checkout(revision, *args)
+          execute = super(revision, *args)
 
+          branch = variable(:branch)
           track_branch = ""
           if branch
             track_branch = "-b #{branch} origin/#{branch}"
