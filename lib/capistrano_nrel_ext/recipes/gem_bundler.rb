@@ -38,10 +38,7 @@ Capistrano::Configuration.instance(true).load do
 
   set(:gem_bundler_shared_children_dirs) do
     unless bundle_dir.to_s.empty?
-      # We'll be installing bundle into each applications vendor/bundle
-      # directory. To make deployments speedy, we want that vendor/bundle
-      # directory to be a shared child across deployments.
-      all_gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
+      bundle_dir
     else
       []
     end
@@ -98,7 +95,7 @@ Capistrano::Configuration.instance(true).load do
 	    if bundle_dir.to_s.empty?
               args << "--system" 
             else
-              args << "--path #{bundle_dir}" 
+              args << "--path #{File.join(latest_release, bundle_dir)}" 
             end
             args << bundle_flags.to_s
             args << "--without #{bundle_without.compact.join(" ")}" unless bundle_without.empty?
