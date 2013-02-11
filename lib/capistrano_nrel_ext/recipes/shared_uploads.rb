@@ -2,11 +2,10 @@ Capistrano::Configuration.instance(true).load do
   #
   # Variables
   #
-  set(:shared_uploads_path) { File.join(deploy_to_base, "shared_uploads", "current") }
+  set(:shared_uploads_path) { abort("Please specify the path for shared uploads, set :shared_uploads_path, '/srv/uploads'" }
 
   # Define the directories where uploaded content will go. This content will be
-  # kept between deployments and will automatically be checked into a
-  # subversion repository.
+  # kept between deployments.
   #
   # The keys of this hash define the public locations, relative to the
   # release's root that will be linked to the shared uploads content. The
@@ -21,8 +20,8 @@ Capistrano::Configuration.instance(true).load do
   #
   # In the deployed release:
   #
-  # CURRENT_RELEASE/public/uploads => SHARED_UPLOADS_PATH/public/production
-  # CURRENT_RELEASE/public/some/dir => SHARED_UPLOADS_PATH/public/production/custom/path
+  # CURRENT_RELEASE/public/uploads => SHARED_UPLOADS_PATH
+  # CURRENT_RELEASE/public/some/dir => SHARED_UPLOADS_PATH/custom/path
   set :upload_children, {}
 
   #
@@ -38,7 +37,7 @@ Capistrano::Configuration.instance(true).load do
       task :finalize_update, :except => { :no_release => true } do
         upload_children.each do |public_dir, shared_upload_dir|
           public_install_path = File.join(latest_release, public_dir)
-          shared_upload_destination_path = File.join(shared_uploads_path, "public", stage.to_s, shared_upload_dir)
+          shared_upload_destination_path = File.join(shared_uploads_path, shared_upload_dir)
 
           if(exists?(:disable_internal_symlinks) && disable_internal_symlinks)
             run "mkdir -p #{public_install_path} && chmod -R 777 #{public_install_path}"
