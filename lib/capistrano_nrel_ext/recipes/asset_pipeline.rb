@@ -8,6 +8,7 @@ Capistrano::Configuration.instance(true).load do
   #
   _cset :asset_pipeline_env, "RAILS_GROUPS=assets"
   _cset :asset_pipeline_role, [:web]
+  _cset :asset_pipeline_dir, "public/assets"
 
   #
   # Hooks
@@ -32,14 +33,34 @@ Capistrano::Configuration.instance(true).load do
             full_application_path = File.join(latest_release, app[:path])
 
             if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
+              turbo_sprockets = remote_file_contains?(File.join(full_application_path, "Gemfile.lock"), "turbo-sprockets")
+
+              # If turbo sprockets is being used, copy the previous assets into
+              # the current deployment's directory so they can be used as a
+              # cache.
+              if(turbo_sprockets && previous_release)
+                previous_assets_path = File.join(previous_release, app[:path], asset_pipeline_dir)
+                new_assets_path = File.join(full_application_path, asset_pipeline_dir)
+                command << "cp -pr #{previous_assets_path} #{new_assets_path}"
+              end
+
               relative_url_env = ""
               if(!app[:base_uri].to_s.empty? && app[:base_uri] != "/")
                 relative_url_env = "RAILS_RELATIVE_URL_ROOT=#{app[:base_uri].inspect}"
               end
 
-              run "cd #{full_application_path} && #{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:precompile"
+              commands << "cd #{full_application_path}"
+              commands << "#{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:precompile"
+
+              # If turbo sprockets is being used, expire any old assets, so the
+              # assets folder doesn't grow indefinitely.
+              if(turbo_sprockets)
+                commands << "#{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:clean_expired"
+              end
             end
           end
+
+          run commands.join(" && ")
         end
       end
 
