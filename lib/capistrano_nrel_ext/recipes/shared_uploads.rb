@@ -2,7 +2,7 @@ Capistrano::Configuration.instance(true).load do
   #
   # Variables
   #
-  set(:shared_uploads_path) { abort("Please specify the path for shared uploads, set :shared_uploads_path, '/srv/uploads'" }
+  set(:shared_uploads_path) { abort("Please specify the path for shared uploads, set :shared_uploads_path, '/srv/uploads'") }
 
   # Define the directories where uploaded content will go. This content will be
   # kept between deployments.
