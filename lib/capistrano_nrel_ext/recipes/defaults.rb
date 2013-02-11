@@ -23,6 +23,13 @@ Capistrano::Configuration.instance(true).load do
   # Don't use sudo.
   set :use_sudo, false
 
+  # Allow deploying as another user (such as for Vagrant boxes where the
+  # current user is "vagrant" but we want to deploy as our normal user
+  # account).
+  if ENV["DEPLOY_USER"]
+    set :user, ENV["DEPLOY_USER"]
+  end
+
   # Set a unique name for this deployed application.
   set(:deploy_name) { "#{stage}-#{application}" }
   set(:deploy_release_name) { "#{deploy_name}-#{release_name}" }
