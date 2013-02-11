@@ -29,11 +29,11 @@ Capistrano::Configuration.instance(true).load do
       DESC
       task :precompile, :roles => asset_pipeline_role, :except => { :no_release => true } do
         if(rails_env != "development")
-          commands = []
           rails_apps.each do |app|
             full_application_path = File.join(latest_release, app[:path])
 
             if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
+              commands = []
               turbo_sprockets = remote_file_contains?(File.join(full_application_path, "Gemfile.lock"), "turbo-sprockets")
 
               # If turbo sprockets is being used, copy the previous assets into
@@ -58,11 +58,9 @@ Capistrano::Configuration.instance(true).load do
               if(turbo_sprockets)
                 commands << "#{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:clean_expired"
               end
-            end
-          end
 
-          if commands.any?
-            run commands.join(" && ")
+              run commands.join(" && ")
+            end
           end
         end
       end
