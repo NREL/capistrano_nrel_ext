@@ -37,10 +37,14 @@ Capistrano::Configuration.instance(true).load do
   end
 
   set(:gem_bundler_shared_children_dirs) do
-    # We'll be installing bundle into each applications vendor/bundle
-    # directory. To make deployments speedy, we want that vendor/bundle
-    # directory to be a shared child across deployments.
-    all_gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
+    unless bundle_dir.to_s.empty?
+      # We'll be installing bundle into each applications vendor/bundle
+      # directory. To make deployments speedy, we want that vendor/bundle
+      # directory to be a shared child across deployments.
+      all_gem_bundler_apps.collect { |application_path| File.join(application_path, bundle_dir) }
+    else
+      []
+    end
   end
 
   set :bundle_exec, lambda { "#{bundle_cmd} exec" }
@@ -91,7 +95,11 @@ Capistrano::Configuration.instance(true).load do
 
           if(remote_file_exists?(gemfile_path))
             args = ["--gemfile #{gemfile_path}"]
-            args << "--path #{bundle_dir}" unless bundle_dir.to_s.empty?
+	    if bundle_dir.to_s.empty?
+              args << "--system" 
+            else
+              args << "--path #{bundle_dir}" 
+            end
             args << bundle_flags.to_s
             args << "--without #{bundle_without.compact.join(" ")}" unless bundle_without.empty?
 
