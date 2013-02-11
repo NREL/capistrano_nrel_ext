@@ -29,6 +29,7 @@ Capistrano::Configuration.instance(true).load do
       DESC
       task :precompile, :roles => asset_pipeline_role, :except => { :no_release => true } do
         if(rails_env != "development")
+          commands = []
           rails_apps.each do |app|
             full_application_path = File.join(latest_release, app[:path])
 
@@ -41,7 +42,7 @@ Capistrano::Configuration.instance(true).load do
               if(turbo_sprockets && previous_release)
                 previous_assets_path = File.join(previous_release, app[:path], asset_pipeline_dir)
                 new_assets_path = File.join(full_application_path, asset_pipeline_dir)
-                command << "cp -pr #{previous_assets_path} #{new_assets_path}"
+                commands << "cp -pr #{previous_assets_path} #{new_assets_path}"
               end
 
               relative_url_env = ""
@@ -60,7 +61,9 @@ Capistrano::Configuration.instance(true).load do
             end
           end
 
-          run commands.join(" && ")
+          if commands.any?
+            run commands.join(" && ")
+          end
         end
       end
 
