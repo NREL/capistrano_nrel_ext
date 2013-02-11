@@ -38,7 +38,7 @@ Capistrano::Configuration.instance(true).load do
 
   set(:gem_bundler_shared_children_dirs) do
     unless bundle_dir.to_s.empty?
-      bundle_dir
+      [bundle_dir]
     else
       []
     end
