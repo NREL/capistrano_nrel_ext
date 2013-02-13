@@ -10,4 +10,10 @@ Capistrano::Configuration.instance(true).load do
   # Don't use symlinks for shared content, since there's only one deployment
   # (and Vagrant doesn't support them on shared drives).
   set :disable_internal_symlinks, true
+
+  # Inside vagrant boxes, all deployments should run as the vagrant user. This
+  # ensures that even if the DEPLOY_USER environment variable has some other
+  # default value for all other deployments, the local vagrant deploys still
+  # deploy as vagrant.
+  set :user, "vagrant"
 end
