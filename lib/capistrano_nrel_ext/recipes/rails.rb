@@ -18,13 +18,13 @@ Capistrano::Configuration.instance(true).load do
     rails_app_paths.each do |app_path, base_uri|
       # Come up with a unique name for this application, suitable for use in
       # file names.
-      app_name = app_path.gsub(%r{(^/|/$)}, "").gsub("/", "_")
+      app_name = app_path.gsub(%r{(^/|/$)}, "").gsub(/[\/\.]/, "-")
       if(app_name.empty?)
         app_name = "app"
       end
 
       apps << {
-        :name => "#{deploy_name}-#{app_name}",
+        :name => "#{deploy_name}-#{app_name}".gsub(/-+/, "-").gsub(/-$/, ""),
         :path => app_path,
         :base_uri => base_uri,
       }
