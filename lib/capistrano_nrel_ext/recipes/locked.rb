@@ -17,10 +17,11 @@ Capistrano::Configuration.instance(true).load do
   #
   namespace :deploy do
     task :lock, :except => { :no_release => true } do
-      run "#{try_sudo} mkdir -p #{File.dirname(lock_file)}"
+      if(!exists?(:rails_env) || rails_env != "development")
+        run "#{try_sudo} mkdir -p #{File.dirname(lock_file)}"
 
-      if(remote_file_exists?(lock_file))
-        raise Capistrano::Error, <<-eos
+        if(remote_file_exists?(lock_file))
+          raise Capistrano::Error, <<-eos
 
 ##### ERROR: DEPLOYMENT LOCKED #####
 
@@ -31,9 +32,10 @@ finishes.
     processes are in fact killed (both locally and remotely). Then you may run:
 
     cap ENVIRONMENT deploy:unlock
-        eos
-      else
-        put("true", lock_file)
+          eos
+        else
+          put("true", lock_file)
+        end
       end
     end
 
