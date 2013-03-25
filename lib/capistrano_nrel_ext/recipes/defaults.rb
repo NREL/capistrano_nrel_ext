@@ -17,6 +17,13 @@ Capistrano::Configuration.instance(true).load do
   default_environment["LD_LIBRARY_PATH"] = "/var/lib/instantclient" # For Rails & Oracle
   default_environment["TNS_ADMIN"] = "/var/lib/instantclient" # For Rails & Oracle so it knows where to find the sqlnet.ora file.
 
+  # Speed up JRuby deployments by forcing tiered compilation.
+  #
+  # Since everything inside the Capistrano deployment is going to be
+  # short-lived tasks, we boosting startup time is preferred:
+  # https://github.com/jruby/jruby/wiki/Improving-startup-time#tiered-compilation-64-bit
+  default_environment["JAVA_OPTS"] = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+
   # Use a pseudo terminal so sudo will work on systems with requiretty enabled.
   default_run_options[:pty] = true
 
