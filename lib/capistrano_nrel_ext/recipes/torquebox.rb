@@ -68,7 +68,7 @@ Capistrano::Configuration.instance(true).load do
         torquebox_apps.each do |app|
           config = {
             "application" => {
-              "root" => File.expand_path(File.join(current_path, app[:path])),
+              "root" => File.expand_path(File.join(current_release, app[:path])),
             },
             "web" => {
               "host" => app[:host],
