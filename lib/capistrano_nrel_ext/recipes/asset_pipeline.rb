@@ -50,14 +50,15 @@ Capistrano::Configuration.instance(true).load do
                 relative_url_env = "RAILS_RELATIVE_URL_ROOT=#{app[:base_uri].inspect}"
               end
 
-              commands << "cd #{full_application_path}"
-              commands << "#{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:precompile"
-
               # If turbo sprockets is being used, expire any old assets, so the
               # assets folder doesn't grow indefinitely.
+              clean_expired_env = ""
               if(turbo_sprockets)
-                commands << "#{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} assets:clean_expired"
+                clean_expired_env = "CLEAN_EXPIRED_ASSETS=true"
               end
+
+              commands << "cd #{full_application_path}"
+              commands << "#{bundle_exec} #{rake} RAILS_ENV=#{rails_env} #{relative_url_env} #{asset_pipeline_env} #{clean_expired_env} assets:precompile"
 
               run commands.join(" && ")
             end
