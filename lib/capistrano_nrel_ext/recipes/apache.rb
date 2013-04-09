@@ -34,7 +34,7 @@ Capistrano::Configuration.instance(true).load do
       files have been deployed.
     DESC
     task :reload, :roles => :app, :except => { :no_release => true } do
-      sudo "#{apache_init_script} reload"
+      sudo "#{apache_init_script} configtest && sudo #{apache_init_script} reload"
     end
   end
 
@@ -55,11 +55,14 @@ Capistrano::Configuration.instance(true).load do
         file for this deployment in Apache's configuration directory.
       DESC
       task :install, :except => { :no_release => true } do
-        conf_file = "#{latest_release}/config/apache/#{stage}.conf"
+        conf_file = "#{latest_release}/config/apache/site.conf"
         if(remote_file_exists?(conf_file))
           run "ln -sf #{conf_file} #{apache_conf_dir}/#{deploy_name}"
           run "a2ensite #{deploy_name}"
         end
+
+        # Ensure the new configuration in place is valid.
+        sudo "#{apache_init_script} configtest"
       end
     end
   end
