@@ -26,20 +26,16 @@ Capistrano::Configuration.instance(true).load do
     # Make everything writable at a later stage in deployment than normal, so
     # any generated files can also be handled.
     task :finalize_permissions, :except => { :no_release => true } do
-      # Try to make everything group writable. If any of this fails, we don't
-      # care, since it probably means the files are owned by someone else,
-      # but should already be setup to be group writable.
-      if(fetch(:group_writable, true))
-        begin
-          # Make the latest release group writable.
-          run "chmod -Rf g+w #{latest_release}"
-        rescue Capistrano::CommandError
-        end
+      commands = []
 
-        begin
-          # Make all of the shared files group writable.
-          run "chmod -Rf g+w #{shared_path}"
-        rescue Capistrano::CommandError
+      # Try to make everything group writable.
+      if(fetch(:group_writable, true))
+        [latest_release, shared_path].each do |path|
+          if(exists?(:group))
+            commands << "chgrp -Rf #{group} #{path}"
+          end
+
+          commands << "chmod -Rf g+w #{path}"
         end
       end
 
@@ -51,15 +47,16 @@ Capistrano::Configuration.instance(true).load do
       dirs = all_writable_children_dirs.collect { |d| File.join(latest_release, d) } +
         all_writable_children_dirs.collect { |d| File.join(shared_path, d) } +
         writable_paths
-
       if(dirs.any?)
-        begin
-          run "chmod -Rf o+w #{dirs.join(" ")}"
-        rescue Capistrano::CommandError
-          # Fail silently. We'll assume if permission changing failed, either
-          # the folder doesn't exist (we don't care), or the contents are
-          # already owned by the proper user (web user).
-        end
+        commands << "chmod -Rf o+w #{dirs.join(" ")}"
+      end
+
+      begin
+        run commands.join("; ")
+      rescue Capistrano::CommandError
+        # Fail silently. We'll assume if anything failed here, it was because
+        # the permissions were already set correctly (but just owned by another
+        # user).
       end
     end
   end
