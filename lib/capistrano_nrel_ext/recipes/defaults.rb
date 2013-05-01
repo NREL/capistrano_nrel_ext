@@ -2,7 +2,7 @@
 # servers. These recipes should not require additional dependencies on the
 # destination server.
 require "capistrano_nrel_ext/recipes/clean_slate"
-#require "capistrano_nrel_ext/recipes/confirm_updated"
+require "capistrano_nrel_ext/recipes/confirm_updated"
 require "capistrano_nrel_ext/recipes/locked"
 require "capistrano_nrel_ext/recipes/cleanup"
 require "capistrano_nrel_ext/recipes/deployed_config"

@@ -4,7 +4,9 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
-  before "deploy:finalize_update", "deploy:confirm_updated"
+  unless(ENV["SKIP_CHECKSUM"])
+    before "deploy:finalize_update", "deploy:confirm_updated"
+  end
 
   #
   # Dependencies
