@@ -1,3 +1,4 @@
+require "capistrano_nrel_ext/actions/install_deploy_files"
 require "capistrano_nrel_ext/actions/remote_tests"
 require "capistrano_nrel_ext/recipes/shared_children"
 
@@ -72,9 +73,29 @@ Capistrano::Configuration.instance(true).load do
   set :rails_env, "development"
 
   #
+  # Hooks
+  #
+  after "deploy:update_code", "deploy:rails:config"
+
+  #
   # Tasks
   #
   namespace :deploy do
+    namespace :rails do
+      desc <<-DESC
+        Create any Rails configuration files.
+      DESC
+      task :config, :roles => :app, :except => { :no_release => true } do
+        files = []
+        rails_apps.each do |app|
+          files << File.join(app[:path], "config/database.yml")
+          files << File.join(app[:path], "config/mongoid.yml")
+        end
+
+        install_deploy_files(files)
+      end
+    end
+
     task :cold do
       update
       schema_load
