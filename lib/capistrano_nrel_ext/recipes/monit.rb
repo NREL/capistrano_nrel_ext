@@ -1,5 +1,5 @@
 require "capistrano_nrel_ext/actions/remote_tests"
-require "capistrano_nrel_ext/actions/sample_files"
+require "capistrano_nrel_ext/actions/template_files"
 
 # DEPRECATED: None of the actions in this monit recipe do anything. We're no longer
 # using monit, but deployment scripts in old branches might still reference it.

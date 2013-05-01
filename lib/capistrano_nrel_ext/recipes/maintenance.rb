@@ -1,7 +1,7 @@
 require "chronic"
 require "tzinfo"
 
-require "capistrano_nrel_ext/actions/sample_files"
+require "capistrano_nrel_ext/actions/template_files"
 
 Capistrano::Configuration.instance(true).load do
   #
@@ -86,7 +86,7 @@ Capistrano::Configuration.instance(true).load do
           # wrong from the user sitting at the y/n prompt for a long time).
           set(:maintenance_starting, time_zone.strftime(time_format, Time.now.utc))
 
-          parse_sample_files(["config/templates/maintenance.html"])
+          parse_template_files(["config/templates/maintenance.html"])
           run "mv #{File.join(latest_release, "config", "templates", "maintenance.html")} #{File.join(shared_path, "public", "system", "maintenance.html")}"
           run "touch #{File.join(shared_path, "public", "system", "maintenance_#{maintenance_type}")}"
 

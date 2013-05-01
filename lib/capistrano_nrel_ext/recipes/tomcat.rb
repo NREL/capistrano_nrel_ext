@@ -1,4 +1,4 @@
-require "capistrano_nrel_ext/actions/sample_files"
+require "capistrano_nrel_ext/actions/template_files"
 
 Capistrano::Configuration.instance(true).load do
   #
@@ -45,7 +45,7 @@ Capistrano::Configuration.instance(true).load do
         variable replacement) to create the actual config file to be used.
       DESC
       task :config, :except => { :no_release => true } do
-        parse_sample_files(["config/tomcat"])
+        parse_template_files(["config/tomcat"])
       end
 
       desc <<-DESC
