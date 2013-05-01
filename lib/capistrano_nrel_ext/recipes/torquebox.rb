@@ -24,6 +24,7 @@ Capistrano::Configuration.instance(true).load do
   _cset :torquebox_http_port, 8180
   _cset(:torquebox_jboss_home) { File.join(torquebox_home, "jboss") }
   _cset(:torquebox_deployments_dir) { File.join(torquebox_jboss_home, "standalone/deployments") }
+  _cset :torquebox_deploy_timeout, 120
   _cset :torquebox_spindown_time, 30
 
   _cset :torquebox_apps, []
@@ -102,7 +103,7 @@ Capistrano::Configuration.instance(true).load do
           # - Make a HEAD request to the app ensure it's pre-warmed.
           run <<-CMD
             touch #{app[:descriptor_path]}.dodeploy && \
-            inotifywait --timeout 60 --event delete_self #{app[:descriptor_path]}.dodeploy && \
+            inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:descriptor_path]}.dodeploy && \
             sleep 0.2 && \
             if [ -f #{app[:descriptor_path]}.failed ]; then \
               echo "Pre-deployment of #{app[:name]} to TorqueBox failed. See logs for more details"; \
