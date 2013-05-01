@@ -54,11 +54,11 @@ def parse_template_files(file_paths)
       puts parsed_content
       logger.info("\n")
 
-      remote_path = remote_template_path.gsub(/\.(erb|template)$/, "")
+      install_remote_path = remote_template_path.gsub(/\.erb$/, "")
 
       # Write the evaluated configuration file to the server as the real
       # configuration file.
-      put(parsed_content, remote_path)
+      put(parsed_content, install_remote_path)
     end
   end
 end
