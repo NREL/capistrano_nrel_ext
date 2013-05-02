@@ -7,7 +7,7 @@ def install_deploy_files(file_paths)
   remote_deploy_file_paths.each do |remote_deploy_file_path|
     install_remote_path = remote_deploy_file_path.gsub(/\.deploy$/, "")
 
-    if(exists?(:rails_env) && rails_env != "development")
+    if(exists?(:rails_env) && rails_env == "development")
       # In development mode, don't overwrite any existing files.
       commands << "rsync -a --ignore-existing #{remote_deploy_file_path} #{install_remote_path}"
     else
