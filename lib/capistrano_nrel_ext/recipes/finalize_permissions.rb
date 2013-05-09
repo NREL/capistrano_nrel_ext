@@ -1,3 +1,5 @@
+require "pathname"
+
 Capistrano::Configuration.instance(true).load do
   #
   # Varabiles
@@ -30,7 +32,31 @@ Capistrano::Configuration.instance(true).load do
 
       # Try to make everything group writable.
       if(fetch(:group_writable, true))
-        [latest_release, shared_path].each do |path|
+        base_path = Pathname.new(deploy_to_base).expand_path
+        path = Pathname.new(deploy_to).expand_path
+
+        # Catch all the subdirectories possibly between the deploy_to_base and
+        # deploy_to paths, and make them all group writable.
+        #
+        # We don't just recursively change deploy_to, since that would keep
+        # change the permissions for all old releases, which slows things down
+        # for big deployments.
+        nonrecursive_paths = [base_path]
+        while(path != base_path && path.to_s != "/" )
+          nonrecursive_paths << path
+          path = path.parent
+        end
+
+        nonrecursive_paths.each do |path|
+          if(exists?(:group))
+            commands << "chgrp -f #{group} #{path}"
+          end
+
+          commands << "chmod -f g+w #{path}"
+        end
+
+        recursive_paths = [latest_release, shared_path]
+        recursive_paths.each do |path|
           if(exists?(:group))
             commands << "chgrp -Rf #{group} #{path}"
           end
