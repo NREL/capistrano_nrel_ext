@@ -9,7 +9,11 @@ Capistrano::Configuration.instance(true).load do
   set(:npm_shared_children_dirs) do
     dirs = []
     npm_apps.each do |app|
-      dirs << File.join(app, "node_modules")
+      # FIXME? We can't share node installs across deployments currently due to
+      # git dependencies not updating:
+      # https://github.com/isaacs/npm/issues/1727
+      # So slower deployments for now...
+      # dirs << File.join(app, "node_modules")
     end
 
     dirs
