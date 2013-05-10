@@ -9,11 +9,7 @@ Capistrano::Configuration.instance(true).load do
   set(:npm_shared_children_dirs) do
     dirs = []
     npm_apps.each do |app|
-      # FIXME? We can't share node installs across deployments currently due to
-      # git dependencies not updating:
-      # https://github.com/isaacs/npm/issues/1727
-      # So slower deployments for now...
-      # dirs << File.join(app, "node_modules")
+      dirs << File.join(app, "node_modules")
     end
 
     dirs
@@ -44,7 +40,14 @@ Capistrano::Configuration.instance(true).load do
         end
 
         npm_paths.each do |full_application_path|
-          run "cd #{full_application_path} && npm install"
+          # Default to production mode where npm will skip development
+          # dependencies, unless we're actually in development.
+          env = ""
+          if(exists?(:rails_env) && rails_env != "development")
+            env = "NODE_ENV=production"
+          end
+
+          run "cd #{full_application_path} && #{env} npm install"
         end
       end
     end
