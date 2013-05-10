@@ -109,7 +109,7 @@ Capistrano::Configuration.instance(true).load do
               echo "Pre-deployment of #{app[:name]} to TorqueBox failed. See logs for more details"; \
               exit 1; \
             fi && \
-            curl --head --header 'Host: #{app[:host]}' 'http://127.0.0.1:#{torquebox_http_port}#{app[:base_uri]}'
+            curl --head --header 'Host: #{app[:host]}' 'http://local-torquebox-ip:#{torquebox_http_port}#{app[:base_uri]}'
           CMD
         end
       end
