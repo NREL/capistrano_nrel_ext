@@ -92,10 +92,10 @@ Capistrano::Configuration.instance(true).load do
 
           if(remote_file_exists?(gemfile_path))
             args = ["--gemfile #{gemfile_path}"]
-	    if bundle_dir.to_s.empty?
-              args << "--system" 
+            if bundle_dir.to_s.empty?
+              args << "--system"
             else
-              args << "--path #{File.join(latest_release, bundle_dir)}" 
+              args << "--path #{File.join(shared_path, bundle_dir)}"
             end
             args << bundle_flags.to_s
             args << "--without #{bundle_without.compact.join(" ")}" unless bundle_without.empty?
