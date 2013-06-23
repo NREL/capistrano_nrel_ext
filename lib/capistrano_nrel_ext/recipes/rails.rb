@@ -89,6 +89,7 @@ Capistrano::Configuration.instance(true).load do
         files = []
         rails_apps.each do |app|
           files << File.join(app[:path], "config/database.yml")
+          files << File.join(app[:path], "config/elasticsearch.yml")
           files << File.join(app[:path], "config/mongoid.yml")
         end
 
