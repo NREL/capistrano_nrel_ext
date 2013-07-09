@@ -72,10 +72,15 @@ Capistrano::Configuration.instance(true).load do
   # Set the default Rails environment.
   set :rails_env, "development"
 
+  set :rails_auto_migrate, true
+  set(:rails_migrate_env) { rails_env }
+
   #
   # Hooks
   #
   after "deploy:update_code", "deploy:rails:config"
+  before "deploy:start", "deploy:rails:auto_migrate"
+  before "deploy:restart", "deploy:rails:auto_migrate"
 
   #
   # Tasks
@@ -95,6 +100,24 @@ Capistrano::Configuration.instance(true).load do
 
         install_deploy_files(files)
       end
+
+      task :auto_migrate, :roles => :migration, :except => { :no_release => true } do
+        if(rails_auto_migrate)
+          deploy.rails.migrate
+        end
+      end
+
+      desc <<-DESC
+        Run the migrate rake task.
+      DESC
+      task :migrate, :roles => :migration, :except => { :no_release => true } do
+        rails_apps.each do |app|
+          app_directory = File.join(latest_release, app[:path])
+
+          env = "RAILS_ENV=#{rails_migrate_env}"
+          run "cd #{app_directory}; #{bundle_exec} #{rake} #{env} db:migrate"
+        end
+      end
     end
 
     task :cold do
@@ -103,19 +126,12 @@ Capistrano::Configuration.instance(true).load do
       start
     end
 
-    task :schema_load, :roles => :db, :only => { :primary => true } do
+    task :schema_load, :roles => :migration, :except => { :no_release => true } do
       rails_apps.each do |app|
-        rake = fetch(:rake, "rake")
         app_directory = File.join(latest_release, app[:path])
 
-        if(remote_file_exists?(File.join(app_directory, "Gemfile")))
-          bundle_exec = fetch(:bundle_exec, "")
-          rake = "#{bundle_exec} rake"
-        end
-
-        env = "RAILS_ENV=#{rails_env}_migrations"
-
-        run "cd #{app_directory}; #{env} #{rake} db:schema:load"
+        env = "RAILS_ENV=#{rails_migrate_env}"
+        run "cd #{app_directory}; #{bundle_exec} #{rake} #{env} db:schema:load"
       end
     end
   end
