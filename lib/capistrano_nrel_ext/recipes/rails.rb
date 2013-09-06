@@ -50,12 +50,12 @@ Capistrano::Configuration.instance(true).load do
     dirs
   end
 
-  # Set any folders or files that need to be writable by the Apache user inside
-  # every Rails application. Since this applies to every Rails application, the
-  # project-specific "writable_children_dirs" configuration option should be
-  # used for any special cases where additional folders need to be writable
-  # inside specific Rails applications.
-  set :rails_writable_children, %w(log tmp tmp/cache public)
+  # Set any folders or files that need to be writable by the web server user
+  # inside every Rails application. Since this applies to every Rails
+  # application, the global "writable_children_dirs" configuration option
+  # should be used for any special cases where additional folders need to be
+  # writable inside specific Rails applications.
+  set :rails_writable_children, %w(log tmp tmp/cache)
 
   set(:rails_writable_children_dirs) do
     dirs = []
