@@ -7,7 +7,6 @@ Capistrano::Configuration.instance(true).load do
   #
   _cset :nginx_conf_dir, "/etc/nginx/sites-available"
   _cset :nginx_init_script, "/etc/init.d/nginx"
-  _cset :nginx_user, "www-data"
   _cset :nginx_applications, ["."]
 
   #

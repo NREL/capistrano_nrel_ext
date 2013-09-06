@@ -83,6 +83,9 @@ Capistrano::Configuration.instance(true).load do
   # Set any absolute paths that need to be writable by the web user.
   set :writable_paths, []
 
+  # The user the web server operates as.
+  _cset :web_server_user, "www-data"
+
   namespace :deploy do
     task :update_code, :except => { :no_release => true } do
       # Don't delete the checkout on rollback when there's only a single

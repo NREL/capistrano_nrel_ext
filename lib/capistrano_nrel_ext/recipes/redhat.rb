@@ -4,5 +4,4 @@ Capistrano::Configuration.instance(true).load do
   #
   set :apache_conf_dir, "/etc/httpd/sites-available"
   set :apache_init_script, "/sbin/service httpd"
-  set :apache_user, "apache"
 end
