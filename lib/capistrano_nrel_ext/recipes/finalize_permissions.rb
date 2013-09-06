@@ -22,6 +22,11 @@ Capistrano::Configuration.instance(true).load do
   before "deploy:create_symlink", "deploy:finalize_permissions"
 
   #
+  # Dependencies
+  #
+  depend(:remote, :command, "setfacl")
+
+  #
   # Tasks
   #
   namespace :deploy do
@@ -74,7 +79,7 @@ Capistrano::Configuration.instance(true).load do
         all_writable_children_dirs.collect { |d| File.join(shared_path, d) } +
         writable_paths
       if(dirs.any?)
-        commands << "chmod -Rf o+w #{dirs.join(" ")}"
+        commands << "setfacl -R -m 'u:#{web_server_user}:rwx' #{dirs.join(" ")}"
       end
 
       begin
