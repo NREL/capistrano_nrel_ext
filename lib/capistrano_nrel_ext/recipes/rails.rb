@@ -55,7 +55,9 @@ Capistrano::Configuration.instance(true).load do
   # application, the global "writable_children_dirs" configuration option
   # should be used for any special cases where additional folders need to be
   # writable inside specific Rails applications.
-  set :rails_writable_children, %w(log tmp tmp/cache)
+  #
+  # public is writable for Rails page caching.
+  set :rails_writable_children, %w(log tmp tmp/cache public)
 
   set(:rails_writable_children_dirs) do
     dirs = []
