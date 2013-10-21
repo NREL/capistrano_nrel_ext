@@ -1,3 +1,5 @@
+require "capistrano/recipes/deploy/scm/git_clean_fix"
+
 # Automatically include other common recipes that should be used on all
 # servers. These recipes should not require additional dependencies on the
 # destination server.
