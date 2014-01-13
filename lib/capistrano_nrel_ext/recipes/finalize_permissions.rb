@@ -46,7 +46,7 @@ Capistrano::Configuration.instance(true).load do
         # We don't just recursively change deploy_to, since that would keep
         # change the permissions for all old releases, which slows things down
         # for big deployments.
-        nonrecursive_paths = [base_path]
+        nonrecursive_paths = [base_path, releases_path]
         while(path != base_path && path.to_s != "/" )
           nonrecursive_paths << path
           path = path.parent
