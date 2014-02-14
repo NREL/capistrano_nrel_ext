@@ -115,7 +115,7 @@ Capistrano::Configuration.instance(true).load do
       DESC
       task :migrate, :roles => :migration, :except => { :no_release => true } do
         rails_apps.each do |app|
-          app_directory = File.join(latest_release, app[:path])
+          app_directory = File.expand_path(File.join(latest_release, app[:path]))
 
           env = "RAILS_ENV=#{rails_migrate_env}"
           run "cd #{app_directory}; #{bundle_exec} #{rake} #{env} db:migrate"
@@ -131,7 +131,7 @@ Capistrano::Configuration.instance(true).load do
 
     task :schema_load, :roles => :migration, :except => { :no_release => true } do
       rails_apps.each do |app|
-        app_directory = File.join(latest_release, app[:path])
+        app_directory = File.expand_path(File.join(latest_release, app[:path]))
 
         env = "RAILS_ENV=#{rails_migrate_env}"
         run "cd #{app_directory}; #{bundle_exec} #{rake} #{env} db:schema:load"

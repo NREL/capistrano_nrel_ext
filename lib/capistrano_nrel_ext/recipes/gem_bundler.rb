@@ -13,6 +13,7 @@ Capistrano::Configuration.instance(true).load do
       all_apps += rails_apps.collect { |app| app[:path] }
     end
 
+    all_apps.uniq!
     all_apps
   end
 
@@ -84,7 +85,7 @@ Capistrano::Configuration.instance(true).load do
       task :install, :except => { :no_release => true } do
         # Gather all the paths for bundler applications.
         gem_bundler_paths = all_gem_bundler_apps.collect do |application_path|
-          File.join(latest_release, application_path)
+          File.expand_path(File.join(latest_release, application_path))
         end
 
         gem_bundler_paths.each do |full_application_path|
