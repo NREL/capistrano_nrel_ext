@@ -8,6 +8,7 @@ Capistrano::Configuration.instance(true).load do
   _cset :torquebox_http_port, 8180
   _cset(:torquebox_jboss_home) { File.join(torquebox_home, "jboss") }
   _cset(:torquebox_deployments_dir) { File.join(torquebox_jboss_home, "standalone/deployments") }
+  _cset :torquebox_deploy_timeout, 120
 
   set(:torquebox_apps) do
     apps = rails_apps
@@ -91,6 +92,12 @@ Capistrano::Configuration.instance(true).load do
               umask 000; touch #{app[:current_path]}/tmp/restart.txt; \
             else
               umask 000; touch #{app[:descriptor_path]}.dodeploy; \
+              inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:descriptor_path]}.dodeploy && \
+              sleep 0.2 && \
+              if [ -f #{app[:descriptor_path]}.failed ]; then \
+                echo "Deployment of #{app[:name]} to TorqueBox failed. See logs for more details"; \
+                exit 1; \
+              fi \
             fi
           CMD
         end
