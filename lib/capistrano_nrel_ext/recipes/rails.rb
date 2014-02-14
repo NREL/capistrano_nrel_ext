@@ -102,6 +102,27 @@ Capistrano::Configuration.instance(true).load do
         end
 
         install_deploy_files(files)
+
+        # Ensure the Rails log file gets created and is writable by the web
+        # server user and deploy group.
+        log = File.join(latest_release, "log/#{rails_env}.log")
+        commands = ["touch #{log}"]
+        commands << "setfacl -m 'u:#{web_server_user}:rwx' #{log}"
+        if(fetch(:group_writable, true))
+          if(exists?(:group))
+            commands << "chgrp -Rf #{group} #{log}"
+          end
+
+          commands << "chmod -f g+w #{log}"
+        end
+
+        begin
+          run commands.join("; ")
+        rescue Capistrano::CommandError
+          # Fail silently. We'll assume if anything failed here, it was because
+          # the permissions were already set correctly (but just owned by another
+          # user).
+        end
       end
 
       task :auto_migrate, :roles => :migration, :except => { :no_release => true } do
