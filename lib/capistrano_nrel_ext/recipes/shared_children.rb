@@ -15,6 +15,10 @@ Capistrano::Configuration.instance(true).load do
       all_paths += gem_bundler_shared_children_dirs
     end
 
+    if(exists?(:lock_jar_shared_children_dirs))
+      all_paths += lock_jar_shared_children_dirs
+    end
+
     if(exists?(:npm_shared_children_dirs))
       all_paths += npm_shared_children_dirs
     end
