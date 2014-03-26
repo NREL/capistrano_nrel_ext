@@ -40,7 +40,7 @@ Capistrano::Configuration.instance(true).load do
         end
 
         npm_paths.each do |full_application_path|
-          run "cd #{full_application_path} && #{env} npm install"
+          run "cd #{full_application_path} && npm install"
         end
       end
     end
