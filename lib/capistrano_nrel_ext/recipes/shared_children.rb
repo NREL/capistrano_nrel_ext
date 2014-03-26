@@ -23,10 +23,6 @@ Capistrano::Configuration.instance(true).load do
       all_paths += npm_shared_children_dirs
     end
 
-    if(exists?(:bower_shared_children_dirs))
-      all_paths += bower_shared_children_dirs
-    end
-
     all_paths
   end
 

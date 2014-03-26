@@ -1,20 +1,10 @@
 require "capistrano_nrel_ext/recipes/npm"
-require "capistrano_nrel_ext/recipes/shared_children"
 
 Capistrano::Configuration.instance(true).load do
   #
   # Varabiles
   #
   set :bower_apps, []
-
-  set(:bower_shared_children_dirs) do
-    dirs = []
-    bower_apps.each do |app|
-      dirs << File.join(app, "node_modules")
-    end
-
-    dirs
-  end
 
   #
   # Hooks
