@@ -9,7 +9,7 @@ Capistrano::Configuration.instance(true).load do
   set :branch_name, ENV["BRANCH"].to_s.gsub(/[^A-Za-z0-9]/, "")
 
   if(branch_name.empty?)
-    set(:deploy_to_subdirectory) { "#{application}/common" }
+    set(:deploy_to_subdirectory) { "#{application}/main" }
   else
     # Checkout the branch for git.
     set(:branch) { ENV["BRANCH"] }
@@ -25,5 +25,5 @@ Capistrano::Configuration.instance(true).load do
 
     # Create a unique name for this branch.
     set :deploy_name, "#{stage}-#{application}-#{branch_name}"
-  end 
+  end
 end

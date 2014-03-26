@@ -17,7 +17,7 @@ Capistrano::Configuration.instance(true).load do
   end
 
   if(sandbox_name.empty?)
-    set(:deploy_to_subdirectory) { "#{application}/common" }
+    set(:deploy_to_subdirectory) { "#{application}/main" }
   else
     # Deploy to a branches subdirectory.
     set(:deploy_to_subdirectory) { "#{application}/#{sandbox_name}" }
