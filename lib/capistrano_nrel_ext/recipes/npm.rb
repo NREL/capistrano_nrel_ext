@@ -34,19 +34,19 @@ Capistrano::Configuration.instance(true).load do
         Install npm modules for Node.js apps.
       DESC
       task :install, :except => { :no_release => true } do
+        # Default to production mode where npm will skip development
+        # dependencies, unless we're actually in development.
+        env = ""
+        if(exists?(:rails_env) && rails_env != "development")
+          env = "NODE_ENV=production"
+        end
+
         # Gather all the paths for npm applications.
         npm_paths = npm_apps.collect do |application_path|
           File.join(latest_release, application_path)
         end
 
         npm_paths.each do |full_application_path|
-          # Default to production mode where npm will skip development
-          # dependencies, unless we're actually in development.
-          env = ""
-          if(exists?(:rails_env) && rails_env != "development")
-            env = "NODE_ENV=production"
-          end
-
           run "cd #{full_application_path} && #{env} npm install"
         end
       end
