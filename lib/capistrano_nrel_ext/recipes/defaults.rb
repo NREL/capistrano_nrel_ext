@@ -26,6 +26,10 @@ Capistrano::Configuration.instance(true).load do
   # https://github.com/jruby/jruby/wiki/Improving-startup-time#tiered-compilation-64-bit
   default_environment["JAVA_OPTS"] = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 
+  # Standardize the shell being used so it's not dependent on the user's
+  # default shell.
+  default_run_options[:shell] = "/bin/bash"
+
   # Use a pseudo terminal so sudo will work on systems with requiretty enabled.
   default_run_options[:pty] = true
 
