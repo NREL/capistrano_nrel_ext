@@ -76,7 +76,12 @@ Capistrano::Configuration.instance(true).load do
   set :rails_env, "development"
 
   set :rails_auto_migrate, true
+  set :rails_migrate_task, "db:migrate"
   set(:rails_migrate_env) { rails_env }
+
+  set :rails_auto_seed, true
+  set :rails_seed_task, "db:seed"
+  set(:rails_seed_env) { rails_env }
 
   #
   # Hooks
@@ -84,6 +89,8 @@ Capistrano::Configuration.instance(true).load do
   after "deploy:update_code", "deploy:rails:config"
   before "deploy:start", "deploy:rails:auto_migrate"
   before "deploy:restart", "deploy:rails:auto_migrate"
+  before "deploy:start", "deploy:rails:auto_seed"
+  before "deploy:restart", "deploy:rails:auto_seed"
 
   #
   # Tasks
@@ -139,7 +146,25 @@ Capistrano::Configuration.instance(true).load do
           app_directory = File.expand_path(File.join(latest_release, app[:path]))
 
           env = "RAILS_ENV=#{rails_migrate_env}"
-          run "cd #{app_directory}; #{bundle_exec} #{rake} #{env} db:migrate"
+          run "cd #{app_directory}; #{bundle_exec} #{rake} #{env} #{rails_migrate_task}"
+        end
+      end
+
+      task :auto_seed, :roles => :migration, :except => { :no_release => true } do
+        if(rails_auto_seed)
+          deploy.rails.seed
+        end
+      end
+
+      desc <<-DESC
+        Run the seed rake task.
+      DESC
+      task :seed, :roles => :migration, :except => { :no_release => true } do
+        rails_apps.each do |app|
+          app_directory = File.expand_path(File.join(latest_release, app[:path]))
+
+          env = "RAILS_ENV=#{rails_seed_env}"
+          run "cd #{app_directory}; #{bundle_exec} #{rake} #{env} #{rails_seed_task}"
         end
       end
     end
