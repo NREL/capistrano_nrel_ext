@@ -31,9 +31,9 @@ Capistrano::Configuration.instance(true).load do
 
   _cset(:bundle_flags) do
     if(stage == :development)
-      ""
+      "--binstubs"
     else
-      "--deployment"
+      "--binstubs --deployment"
     end
   end
 
