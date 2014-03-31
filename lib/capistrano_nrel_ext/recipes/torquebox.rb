@@ -56,12 +56,7 @@ Capistrano::Configuration.instance(true).load do
             },
           }
 
-          file_options = {}
-          if(fetch(:group_writable, true))
-            file_options[:mode] = "0664"
-          end
-
-          put(YAML.dump(config), app[:descriptor_path], file_options)
+          put(YAML.dump(config), app[:descriptor_path])
 
           # Since this deployment descriptor exists outside the normal path,
           # make sure it explicitly has group writable permissions.
