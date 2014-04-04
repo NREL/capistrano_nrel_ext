@@ -32,7 +32,7 @@ Capistrano::Configuration.instance(true).load do
           rails_apps.each do |app|
             full_application_path = File.join(latest_release, app[:path])
 
-            if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
+            if(remote_rake_task_exists?(full_application_path, "assets:precompile"))
               commands = []
               turbo_sprockets = remote_file_contains?(File.join(full_application_path, "Gemfile.lock"), "turbo-sprockets")
 
@@ -81,7 +81,7 @@ Capistrano::Configuration.instance(true).load do
         rails_apps.each do |app|
           full_application_path = File.join(latest_release, app[:path])
 
-          if(remote_file_contains?(File.join(full_application_path, "Gemfile"), "group :assets"))
+          if(remote_rake_task_exists?(full_application_path, "assets:clean"))
             run "cd #{full_application_path} && #{rake} RAILS_ENV=#{rails_env} #{asset_pipeline_env} assets:clean"
           end
         end
