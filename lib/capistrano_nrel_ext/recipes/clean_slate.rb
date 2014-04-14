@@ -12,7 +12,7 @@ Capistrano::Configuration.instance(true).load do
       desc <<-DESC
         Default task overriden to do nothing.
       DESC
-      task default_task do 
+      task default_task do
         # Do nothing
       end
     end

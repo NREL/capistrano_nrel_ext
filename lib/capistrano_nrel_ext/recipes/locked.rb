@@ -21,12 +21,16 @@ Capistrano::Configuration.instance(true).load do
         run "#{try_sudo} mkdir -p #{File.dirname(lock_file)}"
 
         if(remote_file_exists?(lock_file))
+          lock_info = capture("stat -c '%z by %U' #{lock_file}").strip
+
           raise Capistrano::Error, <<-eos
 
 ##### ERROR: DEPLOYMENT LOCKED #####
 
 Another deployment is already in progress. Please wait until that deployment
 finishes.
+
+    Lock file created: #{lock_info}
 
     Note: If you believe this is an error, first make sure all capistrano
     processes are in fact killed (both locally and remotely). Then you may run:

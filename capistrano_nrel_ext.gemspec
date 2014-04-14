@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency("diffy")
   s.add_dependency("highline")
   s.add_dependency("chronic", [">= 0.6.0"])
+  s.add_dependency("chronic_duration")
   s.add_dependency("erubis", [">= 2.6.0"])
   s.add_dependency("tzinfo", [">= 0.3.0"])
 

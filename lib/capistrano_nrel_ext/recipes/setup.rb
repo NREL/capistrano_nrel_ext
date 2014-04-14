@@ -5,8 +5,8 @@ Capistrano::Configuration.instance(true).load do
 
   # Always run setup and check before deployment, since it's nondestructive and
   # means one less step.
-  before "deploy", "deploy:try_setup", "deploy:check"
-  before "deploy:cold", "deploy:try_setup", "deploy:check"
+  before "deploy", "deploy:setup", "deploy:check"
+  before "deploy:cold", "deploy:setup", "deploy:check"
 
   #
   # Tasks
@@ -16,6 +16,8 @@ Capistrano::Configuration.instance(true).load do
     # probably just means that the deployment has already succeeded once, and
     # things are already setup.
     task :try_setup, :except => { :no_release => true } do
+      run "env"
+      #raise "BLAH"
       begin
         deploy.setup
       rescue Capistrano::CommandError

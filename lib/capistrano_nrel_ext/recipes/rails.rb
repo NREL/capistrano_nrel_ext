@@ -117,19 +117,13 @@ Capistrano::Configuration.instance(true).load do
         commands << "setfacl -m 'u:#{web_server_user}:rwx' #{log}"
         if(fetch(:group_writable, true))
           if(exists?(:group))
-            commands << "chgrp -Rf #{group} #{log}"
+            commands << "chgrp -R #{group} #{log}"
           end
 
-          commands << "chmod -f g+w #{log}"
+          commands << "chmod g+w #{log}"
         end
 
-        begin
-          run commands.join("; ")
-        rescue Capistrano::CommandError
-          # Fail silently. We'll assume if anything failed here, it was because
-          # the permissions were already set correctly (but just owned by another
-          # user).
-        end
+        run commands.join(" && ")
       end
 
       task :auto_migrate, :roles => :migration, :except => { :no_release => true } do

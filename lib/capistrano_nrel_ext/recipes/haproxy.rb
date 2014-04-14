@@ -7,7 +7,7 @@ Capistrano::Configuration.instance(true).load do
   set :haproxy_conf_dir, "/etc/haproxy/conf"
 
   #
-  # Hooks 
+  # Hooks
   #
   after "deploy:update_code", "deploy:haproxy:config"
   before "deploy:start", "deploy:haproxy:install"

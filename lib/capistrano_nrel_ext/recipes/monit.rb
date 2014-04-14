@@ -14,7 +14,7 @@ Capistrano::Configuration.instance(true).load do
   set :monit_groups, {}
 
   #
-  # Hooks 
+  # Hooks
   #
   after "deploy:update_code", "deploy:monit:config"
   before "deploy:start", "deploy:monit:reload"

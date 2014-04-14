@@ -15,7 +15,7 @@ Capistrano::Configuration.instance(true).load do
   namespace :deploy do
     namespace :servlets do
       desc <<-DESC
-        Install servlets into Tomcat's apps directory. 
+        Install servlets into Tomcat's apps directory.
       DESC
       task :install, :except => { :no_release => true } do
         # Only deploy servlets if a "servlets" directory exists in this project's
@@ -24,11 +24,7 @@ Capistrano::Configuration.instance(true).load do
           # Copy the servlets to the system-wide deployment directory. Only
           # perform the copy for newer files.
           run "cp -R --update #{File.join(latest_release, "servlets", "*")} #{servlets_deploy_to}"
-
-          begin
-            run "chmod -Rf g+w #{servlets_deploy_to}"
-          rescue Capistrano::CommandError
-          end
+          run "chmod -R g+w #{servlets_deploy_to}"
         end
       end
     end

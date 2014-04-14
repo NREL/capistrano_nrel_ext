@@ -37,10 +37,10 @@ Capistrano::Configuration.instance(true).load do
         on_rollback { run "rm -f #{shared_path}/public/system/maintenance.html && rm -f #{shared_path}/public/system/maintenance_#{maintenance_type}" }
 
         warn <<-EOHTACCESS
-        
+
           # Please add something like this to your site's htaccess to redirect users to the maintenance page.
           # More Info: http://www.shiftcommathree.com/articles/make-your-rails-maintenance-page-respond-with-a-503
-          
+
           ErrorDocument 503 /system/maintenance.html
           RewriteEngine On
           RewriteCond %{REQUEST_URI} !\.(css|gif|jpg|png)$

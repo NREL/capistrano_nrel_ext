@@ -148,7 +148,7 @@ Capistrano::Configuration.instance(true).load do
   set(:server_process_registry_conf_file) { File.join(latest_release, "config", "server_process_registry.yml") }
 
   #
-  # Hooks 
+  # Hooks
   #
   after "deploy:update_code", "deploy:server_process_registry_tasks:config"
   before "deploy:start", "deploy:server_process_registry_tasks:install"

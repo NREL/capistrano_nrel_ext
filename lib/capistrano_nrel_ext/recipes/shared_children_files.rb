@@ -27,14 +27,14 @@ Capistrano::Configuration.instance(true).load do
       end
 
       task :finalize_update, :except => { :no_release => true } do
+        commands = []
         shared_children_files.each do |shared_file|
-          begin
-            run "rm -f #{latest_release}/#{shared_file} && " +
-              "touch #{shared_path}/#{shared_file} && " +
-              "ln -s #{shared_path}/#{shared_file} #{latest_release}/#{shared_file}"
-          rescue Capistrano::CommandError
-          end
+          commands << "rm -f #{latest_release}/#{shared_file}"
+          commands << "touch #{shared_path}/#{shared_file}"
+          commands << "ln -s #{shared_path}/#{shared_file} #{latest_release}/#{shared_file}"
         end
+
+        run commands.join(" && ")
       end
     end
   end

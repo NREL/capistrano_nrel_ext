@@ -10,7 +10,7 @@ Capistrano::Configuration.instance(true).load do
   _cset :nginx_applications, ["."]
 
   #
-  # Hooks 
+  # Hooks
   #
   after "deploy:update_code", "deploy:nginx:config"
   before "deploy:start", "deploy:nginx:install"

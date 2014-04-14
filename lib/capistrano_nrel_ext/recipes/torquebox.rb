@@ -63,18 +63,12 @@ Capistrano::Configuration.instance(true).load do
           if(fetch(:group_writable, true))
             commands = []
             if(exists?(:group))
-              commands << "chgrp -f #{group} #{app[:descriptor_path]}"
+              commands << "chgrp #{group} #{app[:descriptor_path]}"
             end
 
-            commands << "chmod -f g+w #{app[:descriptor_path]}"
+            commands << "chmod g+w #{app[:descriptor_path]}"
 
-            begin
-              run commands.join("; ")
-            rescue Capistrano::CommandError
-              # Fail silently. We'll assume if anything failed here, it was because
-              # the permissions were already set correctly (but just owned by another
-              # user).
-            end
+            run commands.join(" && ")
           end
         end
       end

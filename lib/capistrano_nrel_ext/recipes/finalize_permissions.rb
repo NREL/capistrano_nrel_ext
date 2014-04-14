@@ -54,20 +54,24 @@ Capistrano::Configuration.instance(true).load do
 
         nonrecursive_paths.each do |path|
           if(exists?(:group))
-            commands << "chgrp -f #{group} #{path}"
+            commands << "chgrp #{group} #{path}"
           end
 
-          commands << "chmod -f g+w #{path}"
+          commands << "chmod g+w #{path}"
         end
 
-        recursive_paths = [latest_release, shared_path]
+        recursive_paths = [latest_release]
         recursive_paths.each do |path|
           if(exists?(:group))
-            commands << "chgrp -Rf #{group} #{path}"
+            commands << "chgrp -R #{group} #{path}"
           end
 
-          commands << "chmod -Rf g+w #{path}"
+          commands << "chmod -R g+w #{path}"
         end
+      end
+
+      if(commands.any?)
+        run(commands.join(" && "))
       end
 
       # Files and folders that need to be writable by the web server
@@ -79,15 +83,7 @@ Capistrano::Configuration.instance(true).load do
         all_writable_children_dirs.collect { |d| File.expand_path(File.join(shared_path, d)) } +
         writable_paths
       if(dirs.any?)
-        commands << "setfacl -R -m 'u:#{web_server_user}:rwx' #{dirs.join(" ")}"
-      end
-
-      begin
-        run commands.join("; ")
-      rescue Capistrano::CommandError
-        # Fail silently. We'll assume if anything failed here, it was because
-        # the permissions were already set correctly (but just owned by another
-        # user).
+        run "setfacl -R -m 'u:#{web_server_user}:rwx' #{dirs.join(" ")} &> /dev/null; true"
       end
     end
   end

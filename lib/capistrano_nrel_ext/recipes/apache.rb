@@ -9,7 +9,7 @@ Capistrano::Configuration.instance(true).load do
   _cset :apache_init_script, "/etc/init.d/apache2"
 
   #
-  # Hooks 
+  # Hooks
   #
   after "deploy:update_code", "deploy:apache:config"
   before "deploy:start", "deploy:apache:install"
