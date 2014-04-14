@@ -1,3 +1,5 @@
+require "time"
+
 Capistrano::Configuration.instance(true).load do
   #
   # Variables
@@ -21,7 +23,9 @@ Capistrano::Configuration.instance(true).load do
         run "#{try_sudo} mkdir -p #{File.dirname(lock_file)}"
 
         if(remote_file_exists?(lock_file))
-          lock_info = capture("stat -c '%z by %U' #{lock_file}").strip
+          lock_info = capture("stat -c '%y' #{lock_file}; cat #{lock_file}").strip.split("\n")
+          lock_time = Time.parse(lock_info[0])
+          lock_user = lock_info[1]
 
           raise Capistrano::Error, <<-eos
 
@@ -30,7 +34,7 @@ Capistrano::Configuration.instance(true).load do
 Another deployment is already in progress. Please wait until that deployment
 finishes.
 
-    Lock file created: #{lock_info}
+    Lock file created: #{lock_time} by #{lock_user}
 
     Note: If you believe this is an error, first make sure all capistrano
     processes are in fact killed (both locally and remotely). Then you may run:
@@ -38,7 +42,7 @@ finishes.
     cap ENVIRONMENT deploy:unlock
           eos
         else
-          put("true", lock_file)
+          put(user, lock_file)
         end
       end
     end
