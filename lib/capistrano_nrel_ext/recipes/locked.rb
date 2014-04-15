@@ -19,7 +19,7 @@ Capistrano::Configuration.instance(true).load do
   #
   namespace :deploy do
     task :lock, :except => { :no_release => true } do
-      if(!exists?(:rails_env) || rails_env != "development")
+      if(!exists?(:deploy_via) || deploy_via != "single_checkout_no_update")
         run "#{try_sudo} mkdir -p #{File.dirname(lock_file)}"
 
         if(remote_file_exists?(lock_file))
