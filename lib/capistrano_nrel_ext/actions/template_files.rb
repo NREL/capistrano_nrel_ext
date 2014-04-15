@@ -42,23 +42,24 @@ def parse_template_files(file_paths)
       # the server, and not the local copy, since they may differ (If I'm doing
       # a deploy and I haven't done an svn update or I'm deploying a specific
       # branch while sitting in another branch locally).
-      local_template_path = Tempfile.new("capistrano-template").path
-      get(remote_template_path, local_template_path)
+      Tempfile.open("capistrano-template") do |temp_file|
+        get(remote_template_path, temp_file.path)
 
-      # Parse the template file as a Ruby file so we can evaluate
-      # variables.
-      content = File.read(local_template_path)
-      parsed_content = Erubis::Eruby.new(content).result(binding)
+        # Parse the template file as a Ruby file so we can evaluate
+        # variables.
+        content = File.read(temp_file.path)
+        parsed_content = Erubis::Eruby.new(content).result(binding)
 
-      logger.info("Parsed template file:\n\n")
-      puts parsed_content
-      logger.info("\n")
+        logger.info("Parsed template file:\n\n")
+        puts parsed_content
+        logger.info("\n")
 
-      install_remote_path = remote_template_path.gsub(/\.erb$/, "")
+        install_remote_path = remote_template_path.gsub(/\.erb$/, "")
 
-      # Write the evaluated configuration file to the server as the real
-      # configuration file.
-      put(parsed_content, install_remote_path)
+        # Write the evaluated configuration file to the server as the real
+        # configuration file.
+        put(parsed_content, install_remote_path)
+      end
     end
   end
 end
