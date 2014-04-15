@@ -7,22 +7,5 @@ Capistrano::Configuration.instance(true).load do
   # means one less step.
   before "deploy", "deploy:setup", "deploy:check"
   before "deploy:cold", "deploy:setup", "deploy:check"
-
-  #
-  # Tasks
-  #
-  namespace :deploy do
-    # By default, we'll try to run setup, but we don't care if it fails. This
-    # probably just means that the deployment has already succeeded once, and
-    # things are already setup.
-    task :try_setup, :except => { :no_release => true } do
-      run "env"
-      #raise "BLAH"
-      begin
-        deploy.setup
-      rescue Capistrano::CommandError
-      end
-    end
-  end
 end
 
