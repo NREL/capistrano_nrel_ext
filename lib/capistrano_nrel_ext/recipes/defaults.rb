@@ -25,6 +25,7 @@ Capistrano::Configuration.instance(true).load do
   # Setup default environment variables.
   default_environment["LD_LIBRARY_PATH"] = "/var/lib/instantclient" # For Rails & Oracle
   default_environment["TNS_ADMIN"] = "/var/lib/instantclient" # For Rails & Oracle so it knows where to find the sqlnet.ora file.
+  default_environment["PATH"] = "/opt/nodejs/bin:/opt/rbenv/shims:/opt/rbenv/bin:$PATH"
 
   # Speed up JRuby deployments by forcing tiered compilation.
   #
@@ -32,9 +33,6 @@ Capistrano::Configuration.instance(true).load do
   # short-lived tasks, we boosting startup time is preferred:
   # https://github.com/jruby/jruby/wiki/Improving-startup-time#tiered-compilation-64-bit
   default_environment["JAVA_OPTS"] = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
-
-  # Use a pseudo terminal so sudo will work on systems with requiretty enabled.
-  default_run_options[:pty] = true
 
   # Don't use sudo.
   set :use_sudo, false
@@ -45,7 +43,7 @@ Capistrano::Configuration.instance(true).load do
   # pesky permission issues related to deploying as different users (group
   # writable stuff can only be chmoded by the owner, etc).
   _cset :deploy_sudo_user, "deploy"
-  default_run_options[:shell] = "sudo -u #{deploy_sudo_user} -E /bin/bash"
+  default_run_options[:shell] = "sudo -u #{deploy_sudo_user} /bin/bash"
 
   # Enable SSH agent forwarding for git credentials by default.
   ssh_options[:forward_agent] = true
