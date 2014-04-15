@@ -42,7 +42,7 @@ Capistrano::Configuration.instance(true).load do
               if(turbo_sprockets && previous_release)
                 previous_assets_path = File.join(previous_release, app[:path], asset_pipeline_dir)
                 new_assets_path = File.join(full_application_path, asset_pipeline_dir)
-                commands << "cp -pr #{previous_assets_path} #{new_assets_path}"
+                commands << "if [ -d #{previous_assets_path} ]; then cp -pr #{previous_assets_path} #{new_assets_path}; fi"
               end
 
               relative_url_env = ""
