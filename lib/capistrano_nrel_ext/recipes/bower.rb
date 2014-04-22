@@ -5,6 +5,8 @@ Capistrano::Configuration.instance(true).load do
   # Varabiles
   #
   set :bower_apps, []
+  _cset :bower_cmd, "./node_modules/.bin/bower"
+  _cset :bower_flags, ""
 
   #
   # Hooks
@@ -26,7 +28,7 @@ Capistrano::Configuration.instance(true).load do
         end
 
         bower_paths.each do |full_application_path|
-          run "cd #{full_application_path} && ./node_modules/.bin/bower install"
+          run "cd #{full_application_path} && #{bower_cmd} install --config.interactive=false #{bower_flags}"
         end
       end
     end
