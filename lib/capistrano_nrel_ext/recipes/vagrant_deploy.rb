@@ -16,4 +16,5 @@ Capistrano::Configuration.instance(true).load do
   # default value for all other deployments, the local vagrant deploys still
   # deploy as vagrant.
   set :user, "vagrant"
+  set :deploy_sudo_user, "vagrant"
 end
