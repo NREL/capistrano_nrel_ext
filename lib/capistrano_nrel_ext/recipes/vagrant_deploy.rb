@@ -21,4 +21,9 @@ Capistrano::Configuration.instance(true).load do
   # Reset this, since the one in defaults.rb gets set at load time, so it
   # doesn't pick up the fact that we've changed the deployment sudo user.
   default_run_options[:shell] = "sudo -u #{deploy_sudo_user} /bin/bash"
+
+  # Disable ACL setting on Vagrant, since they aren't supported on the NFS
+  # share Vagrant shares files through, and we also assume everything is
+  # running as the single "vagrant" user so they shouldn't be necessary anyway.
+  set :file_system_acl_support, false
 end

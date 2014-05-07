@@ -79,11 +79,13 @@ Capistrano::Configuration.instance(true).load do
       #
       # Try changing the permissions in both the release directory and the
       # shared directory, since chmod won't recursively follow symlinks.
-      dirs = all_writable_children_dirs.collect { |d| File.expand_path(File.join(latest_release, d)) } +
-        all_writable_children_dirs.collect { |d| File.expand_path(File.join(shared_path, d)) } +
-        writable_paths
-      if(dirs.any?)
-        run "setfacl -R -m 'u:#{web_server_user}:rwx' #{dirs.join(" ")} &> /dev/null; true"
+      if(file_system_acl_support)
+        dirs = all_writable_children_dirs.collect { |d| File.expand_path(File.join(latest_release, d)) } +
+          all_writable_children_dirs.collect { |d| File.expand_path(File.join(shared_path, d)) } +
+          writable_paths
+        if(dirs.any?)
+          run "setfacl -R -m 'u:#{web_server_user}:rwx' #{dirs.join(" ")} &> /dev/null; true"
+        end
       end
     end
   end

@@ -113,6 +113,9 @@ Capistrano::Configuration.instance(true).load do
   # The user the web server operates as.
   _cset :web_server_user, "www-data"
 
+  # Whether file system ACLs as supported or not.
+  _cset :file_system_acl_support, true
+
   #
   # Hooks
   #

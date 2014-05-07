@@ -114,7 +114,11 @@ Capistrano::Configuration.instance(true).load do
         # server user and deploy group.
         log = File.join(latest_release, "log/#{rails_env}.log")
         commands = ["touch #{log}"]
-        commands << "setfacl -m 'u:#{web_server_user}:rwx' #{log}"
+
+        if(file_system_acl_support)
+          commands << "setfacl -m 'u:#{web_server_user}:rwx' #{log}"
+        end
+
         if(fetch(:group_writable, true))
           if(exists?(:group))
             commands << "chgrp -R #{group} #{log}"
