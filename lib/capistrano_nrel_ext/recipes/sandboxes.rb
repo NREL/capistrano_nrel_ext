@@ -6,7 +6,7 @@ Capistrano::Configuration.instance(true).load do
   # Sandboxes can be setup in the developement environment. If no sandbox is
   # given, then things are deployed to cttsdev.nrel.gov. If a sandbox name is
   # given, then a sandbox is created and is accessed by SANDBOX.cttsdev.nrel.gov
-  set :sandbox_name, ENV["SANDBOX"].to_s.gsub(/[^A-Za-z0-9]/, "")
+  set :sandbox_name, ENV["SANDBOX"].to_s.gsub(/[^A-Za-z0-9\-]/, "")
 
   if ENV["BRANCH"]
     # Checkout the branch for git.

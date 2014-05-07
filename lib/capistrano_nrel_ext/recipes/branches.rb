@@ -6,7 +6,7 @@ Capistrano::Configuration.instance(true).load do
   # Since the branch name may be used as a subdomain, we need to clean it up a
   # bit. Notably, underscores from branch names will be removed, since some
   # browsers have problems with underscores in domain names.
-  set :branch_name, ENV["BRANCH"].to_s.gsub(/[^A-Za-z0-9]/, "")
+  set :branch_name, ENV["BRANCH"].to_s.gsub(/[^A-Za-z0-9\-]/, "")
 
   if(branch_name.empty?)
     set(:deploy_to_subdirectory) { "#{application}/main" }
