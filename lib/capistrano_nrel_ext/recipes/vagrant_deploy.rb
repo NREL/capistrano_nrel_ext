@@ -17,4 +17,8 @@ Capistrano::Configuration.instance(true).load do
   # deploy as vagrant.
   set :user, "vagrant"
   set :deploy_sudo_user, "vagrant"
+
+  # Reset this, since the one in defaults.rb gets set at load time, so it
+  # doesn't pick up the fact that we've changed the deployment sudo user.
+  default_run_options[:shell] = "sudo -u #{deploy_sudo_user} /bin/bash"
 end
