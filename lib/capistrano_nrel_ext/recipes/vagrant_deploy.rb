@@ -26,4 +26,8 @@ Capistrano::Configuration.instance(true).load do
   # share Vagrant shares files through, and we also assume everything is
   # running as the single "vagrant" user so they shouldn't be necessary anyway.
   set :file_system_acl_support, false
+
+  # Don't use group writable permissions on vagrant, since we assume everything
+  # is run and owned by the single vagrant user.
+  set :group_writable, false
 end
