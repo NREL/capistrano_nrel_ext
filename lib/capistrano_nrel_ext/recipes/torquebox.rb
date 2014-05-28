@@ -9,14 +9,19 @@ Capistrano::Configuration.instance(true).load do
   _cset(:torquebox_jboss_home) { File.join(torquebox_home, "jboss") }
   _cset(:torquebox_deployments_dir) { File.join(torquebox_jboss_home, "standalone/deployments") }
   _cset :torquebox_deploy_timeout, 120
+  _cset(:torquebox_app_paths) { rails_app_paths.keys }
 
   set(:torquebox_apps) do
-    apps = rails_apps
-    apps.each do |app|
-      app[:descriptor_path] = File.join(torquebox_deployments_dir, "#{app[:name]}-knob.yml")
+    torquebox_apps = []
+    rails_apps.each do |app|
+      if(torquebox_app_paths.include?(app[:path]))
+        torquebox_apps << app.merge({
+          :descriptor_path => File.join(torquebox_deployments_dir, "#{app[:name]}-knob.yml"),
+        })
+      end
     end
 
-    apps
+    torquebox_apps
   end
 
   #
@@ -78,13 +83,22 @@ Capistrano::Configuration.instance(true).load do
           run <<-CMD
             if [ -f #{app[:descriptor_path]}.deployed ]; then \
               chmod 777 #{app[:current_path]}/tmp; \
-              umask 000; touch #{app[:current_path]}/tmp/restart.txt; \
+              umask 000; touch #{app[:current_path]}/tmp/restart.txt && \
+              inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:current_path]}/tmp/restart.txt; \
+              if [ $? -ne 0 ]; then \
+                echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:current_path]}/tmp/restart.txt not cleaned up. See logs for more details"; \
+                exit 1; \
+              fi \
             else
               umask 000; touch #{app[:descriptor_path]}.dodeploy; \
-              inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:descriptor_path]}.dodeploy && \
+              inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:descriptor_path]}.dodeploy; \
+              if [ $? -ne 0 ]; then \
+                echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:descriptor_path]}.dodeploy not cleaned up. See logs for more details"; \
+                exit 1; \
+              fi; \
               sleep 0.2 && \
               if [ -f #{app[:descriptor_path]}.failed ]; then \
-                echo "Deployment of #{app[:name]} to TorqueBox failed. See logs for more details"; \
+                echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:descriptor_path]}.failed present. See logs for more details"; \
                 exit 1; \
               fi \
             fi
