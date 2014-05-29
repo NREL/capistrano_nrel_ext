@@ -42,12 +42,16 @@ Capistrano::Configuration.instance(true).load do
 
   # For user sandboxes, everything should just run as the normal user (so no
   # sudo-ing to a shared "deploy" user).
-  if(exists?(:sandbox_name) && !sandbox_name.empty?)
-    set(:deploy_sudo_user) { user }
-    default_run_options[:shell] = "/bin/bash"
+  set(:deploy_sudo_user) do
+    if(!exists?(:sandbox_name) || sandbox_name.empty?)
+      "deploy"
+    else
+      default_run_options[:shell] = "/bin/bash"
+      user
+    end
   end
 
-  # For user sandboxes, don't bother with permissions, since we'll assume
+  # For user sandboxes, don't bother with group permissions, since we'll assume
   # everything should be owned by the deployment user.
   set(:group_writable) do
     if(!exists?(:sandbox_name) || sandbox_name.empty?)
