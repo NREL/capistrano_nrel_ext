@@ -40,6 +40,11 @@ Capistrano::Configuration.instance(true).load do
   set(:releases_path_base) { abort("Please specify the base path for your releases, set :releases_path_base, '/srv'") }
   set(:releases_path) { File.join(releases_path_base, application) }
 
+  # For development purposes, everything should just run as the normal user (so
+  # no sudo-ing to a shared "deploy" user).
+  set(:deploy_sudo_user) { user }
+  default_run_options[:shell] = "/bin/bash"
+
   # For user sandboxes, don't bother with permissions, since we'll assume
   # everything should be owned by the deployment user.
   set(:group_writable) do
