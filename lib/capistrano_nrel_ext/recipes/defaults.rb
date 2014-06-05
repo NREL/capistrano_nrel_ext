@@ -132,7 +132,18 @@ Capistrano::Configuration.instance(true).load do
       # Don't delete the checkout on rollback when there's only a single
       # checkout.
       if(![:single_checkout_no_update].include?(deploy_via))
-        on_rollback { run "rm -f #{lock_file}; rm -rf #{release_path}; true" }
+        on_rollback do
+          if(ENV["ROLLBACK_SLEEP"])
+            logger.info("=== WARNING! ===")
+            logger.info("Waiting #{ENV["ROLLBACK_SLEEP"]} seconds before rolling back failed deployment. Do not cancel this sleep so that proper cleanup can proceed.")
+            ENV["ROLLBACK_SLEEP"].to_i.times do |i|
+              print "."
+              sleep 1
+            end
+          end
+
+          run "rm -f #{lock_file}; rm -rf #{release_path}; true"
+        end
       end
 
       strategy.deploy!
