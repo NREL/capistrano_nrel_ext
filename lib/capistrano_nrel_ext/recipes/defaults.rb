@@ -16,6 +16,7 @@ require "capistrano_nrel_ext/recipes/setup"
 require "capistrano_nrel_ext/recipes/shared_children"
 require "capistrano_nrel_ext/recipes/shared_children_files"
 require "capistrano_nrel_ext/recipes/undeploy"
+require "capistrano_nrel_ext/recipes/messages"
 
 Capistrano::Configuration.instance(true).load do
   #
@@ -122,7 +123,6 @@ Capistrano::Configuration.instance(true).load do
 
   # Show a success message after a full deployment.
   after "deploy:setup", "deploy:start_timers"
-  after "deploy", "deploy:success_message"
 
   #
   # Tasks
@@ -168,20 +168,7 @@ Capistrano::Configuration.instance(true).load do
     end
 
     task :start_timers do
-      $start_time = Time.now
-    end
-
-    # Show a clear success message after a full deployment. This is mostly to
-    # clarify that any rm errors showing up from the cleanup task still mean the
-    # deploy succeeded.
-    task :success_message, :except => { :no_release => true } do
-      duration = ChronicDuration.output(Time.now - $start_time, :format => :short)
-      logger.info("\n\nYour deployment to #{stage} has succeeded.\n\nDeployment took: #{duration}\n\n\n")
-
-      # A silly banner, because its fun.
-      banner = Artii::Base.new(:font => "big")
-      puts banner.asciify("Deployment")
-      puts banner.asciify("Success!!")
+      $deployment_start_time = Time.now
     end
   end
 end

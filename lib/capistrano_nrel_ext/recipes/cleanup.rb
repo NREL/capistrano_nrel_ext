@@ -1,5 +1,3 @@
-require "artii"
-
 Capistrano::Configuration.instance(true).load do
   #
   # Hooks
