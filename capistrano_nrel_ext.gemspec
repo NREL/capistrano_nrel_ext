@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "capistrano_nrel_ext"
 
-  s.add_dependency("capistrano")
+  s.add_dependency("capistrano", ["< 3.0"])
 
   # net-ssh 2.5.x is currently broken:
   # https://github.com/net-ssh/net-ssh/issues/45
