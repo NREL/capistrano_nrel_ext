@@ -16,9 +16,11 @@ Gem::Specification.new do |s|
 
   s.add_dependency("capistrano", ["< 3.0"])
 
-  # net-ssh 2.5.x is currently broken:
+  # net-ssh 2.5.0 and 2.5.1 were broken:
   # https://github.com/net-ssh/net-ssh/issues/45
-  s.add_dependency("net-ssh", ["~> 2.4.0"])
+  # 2.8.0+ are currently somewhat broken:
+  # https://github.com/net-ssh/net-ssh/issues/145
+  s.add_dependency("net-ssh", [">= 2.5.2", "< 2.8.0"])
 
   s.add_dependency("diffy")
   s.add_dependency("highline")
