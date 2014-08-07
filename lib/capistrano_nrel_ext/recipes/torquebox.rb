@@ -56,8 +56,9 @@ Capistrano::Configuration.instance(true).load do
   #
   # Dependencies
   #
-  depend(:remote, :command, "inotifywait")
   depend(:remote, :command, "curl")
+  depend(:remote, :command, "find")
+  depend(:remote, :command, "inotifywait")
 
   #
   # Tasks
@@ -166,13 +167,14 @@ Capistrano::Configuration.instance(true).load do
           # Find all the descriptor files related to our torquebox apps.
           descriptors_glob = []
           torquebox_apps.each do |app|
-            descriptors_glob << File.join(torquebox_deployments_dir, "#{app[:release_name_prefix]}*-knob.yml*")
+            descriptors_glob << "#{app[:release_name_prefix]}*-knob.yml*"
 
             # Cleanup any deployments from if "hot" deploys were previously used.
-            descriptors_glob << File.join(torquebox_deployments_dir, "#{app[:name]}-knob.yml*")
+            descriptors_glob << "#{app[:name]}-knob.yml*"
           end
 
-          descriptors = capture("ls -1 #{descriptors_glob.join(" ")}").to_s.split
+          find_args = descriptors_glob.map { |glob| "-name '#{glob}'" }
+          descriptors = capture("find torquebox_deployments_dir #{find_args.join(" -or ")}").to_s.split
 
           # Remove all the descriptors related to the actively deployed versions
           # of the apps.
