@@ -174,7 +174,7 @@ Capistrano::Configuration.instance(true).load do
           end
 
           find_args = descriptors_glob.map { |glob| "-name '#{glob}'" }
-          descriptors = capture("find #{torquebox_deployments_dir} #{find_args.join(" -or ")}").to_s.split
+          descriptors = capture("find -H #{torquebox_deployments_dir} #{find_args.join(" -or ")}").to_s.split
 
           # Remove all the descriptors related to the actively deployed versions
           # of the apps.
