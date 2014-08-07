@@ -1,3 +1,4 @@
+require "capistrano_nrel_ext/recipes/nginx"
 require "capistrano_nrel_ext/recipes/rails"
 
 Capistrano::Configuration.instance(true).load do
@@ -9,15 +10,34 @@ Capistrano::Configuration.instance(true).load do
   _cset(:torquebox_jboss_home) { File.join(torquebox_home, "jboss") }
   _cset(:torquebox_deployments_dir) { File.join(torquebox_jboss_home, "standalone/deployments") }
   _cset :torquebox_deploy_timeout, 120
+  _cset :torquebox_deploy_style, :phased
   _cset(:torquebox_app_paths) { rails_app_paths.keys }
+  _cset :torquebox_phased_spindown_time, 10
+  _cset(:torquebox_release_domain) do
+    if(torquebox_deploy_style == :hot)
+      domain
+    else
+      "#{release_name.gsub(/[^A-Za-z0-9]/, "")}.#{domain}"
+    end
+  end
 
   set(:torquebox_apps) do
     torquebox_apps = []
     rails_apps.each do |app|
       if(torquebox_app_paths.include?(app[:path]))
-        torquebox_apps << app.merge({
-          :descriptor_path => File.join(torquebox_deployments_dir, "#{app[:name]}-knob.yml"),
-        })
+        torquebox_app = app.dup
+
+        if(torquebox_deploy_style == :hot)
+          torquebox_app[:release_name_prefix] = torquebox_app[:name]
+          torquebox_app[:release_name] = torquebox_app[:name]
+        else
+          torquebox_app[:release_name_prefix] = "#{torquebox_app[:name]}-release-"
+          torquebox_app[:release_name] = "#{torquebox_app[:release_name_prefix]}#{release_name}"
+        end
+
+        torquebox_app[:descriptor_path] = File.join(torquebox_deployments_dir, "#{torquebox_app[:release_name]}-knob.yml")
+
+        torquebox_apps << torquebox_app
       end
     end
 
@@ -27,16 +47,17 @@ Capistrano::Configuration.instance(true).load do
   #
   # Hooks
   #
-  before "deploy:start", "deploy:torquebox:install"
-  before "deploy:restart", "deploy:torquebox:install"
-  after "deploy:start", "deploy:torquebox:reload"
-  after "deploy:restart", "deploy:torquebox:reload"
+  before "deploy:start", "deploy:torquebox:install", "deploy:torquebox:phased_prewarm"
+  before "deploy:restart", "deploy:torquebox:install", "deploy:torquebox:phased_prewarm"
+  after "deploy:start", "deploy:torquebox:hot_reload", "deploy:torquebox:phased_spindown"
+  after "deploy:restart", "deploy:torquebox:hot_reload", "deploy:torquebox:phased_spindown"
   before "undeploy:delete", "undeploy:torquebox:delete"
 
   #
   # Dependencies
   #
   depend(:remote, :command, "inotifywait")
+  depend(:remote, :command, "curl")
 
   #
   # Tasks
@@ -50,16 +71,20 @@ Capistrano::Configuration.instance(true).load do
         torquebox_apps.each do |app|
           config = {
             "application" => {
-              "root" => app[:current_path],
+              "root" => app[:latest_release_path]
             },
             "web" => {
-              "host" => domain,
+              "host" => torquebox_release_domain,
               "context" => app[:base_uri],
             },
             "environment" => {
               "RAILS_ENV" => rails_env,
             },
           }
+
+          if(torquebox_deploy_style == :hot)
+            config["application"]["root"] = app[:current_path]
+          end
 
           put(YAML.dump(config), app[:descriptor_path])
 
@@ -78,31 +103,97 @@ Capistrano::Configuration.instance(true).load do
         end
       end
 
-      task :reload, :roles => :app, :except => { :no_release => true } do
-        torquebox_apps.each do |app|
-          run <<-CMD
-            if [ -f #{app[:descriptor_path]}.deployed ]; then \
-              chmod 777 #{app[:current_path]}/tmp; \
-              umask 000; touch #{app[:current_path]}/tmp/restart.txt && \
-              inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:current_path]}/tmp/restart.txt; \
-              if [ $? -ne 0 ]; then \
-                echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:current_path]}/tmp/restart.txt not cleaned up. See logs for more details"; \
-                exit 1; \
-              fi \
-            else
-              umask 000; touch #{app[:descriptor_path]}.dodeploy; \
-              inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:descriptor_path]}.dodeploy; \
+      task :phased_prewarm, :roles => :app, :except => { :no_release => true } do
+        if(torquebox_deploy_style == :phased)
+          torquebox_apps.each do |app|
+            # Perform the following:
+            #
+            # - Deploy the new app
+            # - Wait for it to finish deploying (marked by the ".dodeploy" file
+            #   being deleted).
+            # - Make sure it didn't fail deploying.
+            # - Make a HEAD request to the app ensure it's pre-warmed.
+            run <<-CMD
+              umask 000; touch #{app[:descriptor_path]}.dodeploy && \
+              inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:descriptor_path]}.dodeploy && \
               if [ $? -ne 0 ]; then \
                 echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:descriptor_path]}.dodeploy not cleaned up. See logs for more details"; \
                 exit 1; \
               fi; \
               sleep 0.2 && \
               if [ -f #{app[:descriptor_path]}.failed ]; then \
-                echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:descriptor_path]}.failed present. See logs for more details"; \
+                echo "Pre-deployment of #{app[:name]} to TorqueBox failed. See logs for more details"; \
                 exit 1; \
-              fi \
-            fi
-          CMD
+              fi && \
+              curl --head --header 'Host: #{torquebox_release_domain}' 'http://127.0.0.1:#{torquebox_http_port}#{app[:base_uri]}'
+            CMD
+          end
+        end
+      end
+
+      task :hot_reload, :roles => :app, :except => { :no_release => true } do
+        if(torquebox_deploy_style == :hot)
+          torquebox_apps.each do |app|
+            run <<-CMD
+              if [ -f #{app[:descriptor_path]}.deployed ]; then \
+                chmod 777 #{app[:current_path]}/tmp; \
+                umask 000; touch #{app[:current_path]}/tmp/restart.txt && \
+                inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:current_path]}/tmp/restart.txt && \
+                if [ $? -ne 0 ]; then \
+                  echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:current_path]}/tmp/restart.txt not cleaned up. See logs for more details"; \
+                  exit 1; \
+                fi \
+              else
+                umask 000; touch #{app[:descriptor_path]}.dodeploy && \
+                inotifywait --timeout #{torquebox_deploy_timeout} --event delete_self #{app[:descriptor_path]}.dodeploy && \
+                if [ $? -ne 0 ]; then \
+                  echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:descriptor_path]}.dodeploy not cleaned up. See logs for more details"; \
+                  exit 1; \
+                fi; \
+                sleep 0.2 && \
+                if [ -f #{app[:descriptor_path]}.failed ]; then \
+                  echo "Deployment of #{app[:name]} to TorqueBox failed. #{app[:descriptor_path]}.failed present. See logs for more details"; \
+                  exit 1; \
+                fi \
+              fi
+            CMD
+          end
+        end
+      end
+
+      task :phased_spindown, :roles => :app, :except => { :no_release => true } do
+        if(torquebox_deploy_style == :phased)
+          # Find all the descriptor files related to our torquebox apps.
+          descriptors_glob = []
+          torquebox_apps.each do |app|
+            descriptors_glob << File.join(torquebox_deployments_dir, "#{app[:release_name_prefix]}*-knob.yml*")
+
+            # Cleanup any deployments from if "hot" deploys were previously used.
+            descriptors_glob << File.join(torquebox_deployments_dir, "#{app[:name]}-knob.yml*")
+          end
+
+          descriptors = capture("ls -1 #{descriptors_glob.join(" ")}").to_s.split
+
+          # Remove all the descriptors related to the actively deployed versions
+          # of the apps.
+          active_descriptors = torquebox_apps.map { |app| app[:descriptor_path] }
+          active_descriptors.each do |active_descriptor|
+            descriptors.reject! { |path| path.start_with?(active_descriptor) }
+          end
+
+          # If any descriptors remain, these are from previous versions of the
+          # app in previous deployments.
+          if descriptors.any?
+            # Undeploy the previous versions of the apps, but first wait to allow
+            # time for any active connections to the previous version to finish.
+            #
+            # It would be nice if there were a way to determine if the old
+            # version had any active connections or not, but for now, we'll just
+            # assume this timeout will cover most circumstances.
+            logger.info("Waiting #{torquebox_phased_spindown_time} seconds before undeploying previous versions of TorqueBox apps...")
+            sleep torquebox_phased_spindown_time
+            run "rm -f #{descriptors.join(" ")}"
+          end
         end
       end
     end
@@ -111,9 +202,8 @@ Capistrano::Configuration.instance(true).load do
   namespace :undeploy do
     namespace :torquebox do
       task :delete do
-        torquebox_apps.each do |app|
-          run "rm -f #{app[:descriptor_path]}"
-        end
+        descriptors = torquebox_apps.map { |app| app[:descriptor_path] }
+        run "rm -f #{descriptors.join(" ")}"
       end
     end
   end
