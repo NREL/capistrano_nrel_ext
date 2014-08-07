@@ -28,7 +28,6 @@ Capistrano::Configuration.instance(true).load do
         :name => "#{deploy_name}-#{app_name}".gsub(/-+/, "-").gsub(/-$/, ""),
         :path => app_path,
         :current_path => File.expand_path(File.join(current_path, app_path)),
-        :latest_release_path => File.expand_path(File.join(latest_release, app_path)),
         :base_uri => base_uri,
       }
     end
