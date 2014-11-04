@@ -50,10 +50,6 @@ Capistrano::Configuration.instance(true).load do
         file for this deployment in Nginx's configuration directory.
       DESC
       task :install, :roles => :app, :except => { :no_release => true } do
-        # Make sure the existing nginx config in place on the server is valid
-        # before installing any new stuff.
-        sudo "#{nginx_init_script} configtest"
-
         conf_file = "#{latest_release}/config/nginx/site.conf"
         if(remote_file_exists?(conf_file))
           run "ln -sf #{conf_file} #{nginx_conf_dir}/#{deploy_name}"
