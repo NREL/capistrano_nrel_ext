@@ -1,5 +1,5 @@
 require "capistrano_nrel_ext/recipes/gem_bundler"
-require "whenever/capistrano/recipes"
+require "whenever/capistrano/v2/recipes"
 
 # This just shifts whenever's default capistrano recipes to happen slightly
 # later so it gets along with when we install gems (after deploy:update_code
