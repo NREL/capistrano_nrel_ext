@@ -9,6 +9,7 @@ Capistrano::Configuration.instance(true).load do
   #
   set :maintenance_type, "general"
   set :maintenance_reason, "maintenance"
+  set :maintenance_template, "maintenance.html"
   set :maintenance_starting, ""
   set :maintenance_ending, "shortly"
 
@@ -34,6 +35,10 @@ Capistrano::Configuration.instance(true).load do
         Further customization will require that you write your own task.
       DESC
       task :disable, :roles => :web, :except => { :no_release => true } do
+        if ENV["TYPE"]
+          set(:maintenance_type, ENV["TYPE"])
+        end
+
         on_rollback { run "rm -f #{shared_path}/public/system/maintenance.html && rm -f #{shared_path}/public/system/maintenance_#{maintenance_type}" }
 
         warn <<-EOHTACCESS
@@ -77,17 +82,20 @@ Capistrano::Configuration.instance(true).load do
         logger.info("Maintenance Starting: #{maintenance_starting.inspect}")
         logger.info("Maintenance Estimated Ending: #{maintenance_ending.inspect}\n\n")
 
-        confirm = Capistrano::CLI.ui.ask("Are you sure you want to put the website into maintenance mode? (y/n) ") do |q|
-          q.default = "n"
-        end.downcase
+        confirm = "y"
+        if(ENV["SKIP_PROMPT"] != "true")
+          confirm = Capistrano::CLI.ui.ask("Are you sure you want to put the website into maintenance mode? (y/n) ") do |q|
+            q.default = "n"
+          end.downcase
+        end
 
         if(confirm == "y")
           # Redefine the starting time (in case the original estimate is now
           # wrong from the user sitting at the y/n prompt for a long time).
           set(:maintenance_starting, time_zone.strftime(time_format, Time.now.utc))
 
-          parse_template_files(["config/templates/maintenance.html"])
-          run "mv #{File.join(latest_release, "config", "templates", "maintenance.html")} #{File.join(shared_path, "public", "system", "maintenance.html")}"
+          parse_template_files(["config/templates/#{maintenance_template}"])
+          run "mv #{File.join(latest_release, "config", "templates", maintenance_template)} #{File.join(shared_path, "public", "system", "maintenance.html")}"
           run "touch #{File.join(shared_path, "public", "system", "maintenance_#{maintenance_type}")}"
 
           # If Varnish is being used, clear its cache.
