@@ -39,6 +39,10 @@ Capistrano::Configuration.instance(true).load do
           set(:maintenance_type, ENV["TYPE"])
         end
 
+        if ENV["TEMPLATE"]
+          set(:maintenance_template, ENV["TEMPLATE"])
+        end
+
         on_rollback { run "rm -f #{shared_path}/public/system/maintenance.html && rm -f #{shared_path}/public/system/maintenance_#{maintenance_type}" }
 
         warn <<-EOHTACCESS
