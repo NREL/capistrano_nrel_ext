@@ -12,9 +12,13 @@ Capistrano::Configuration.instance(true).load do
         abort("This should not be run on the production server")
       end
 
-      confirm = Capistrano::CLI.ui.ask("Are you sure you would like to completely remove the deployment from:\n#{deploy_to}? (y/n) ") do |q|
-        q.default = "n"
-      end.downcase
+      if(ENV["CONFIRM_UNDEPLOY"] == "true")
+        confirm = "y"
+      else
+        confirm = Capistrano::CLI.ui.ask("Are you sure you would like to completely remove the deployment from:\n#{deploy_to}? (y/n) ") do |q|
+          q.default = "n"
+        end.downcase
+      end
 
       if(confirm == "y")
         delete
